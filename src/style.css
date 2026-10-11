@@ -1,4 +1,59 @@
 @import "tailwindcss";
+.settings-tabs button[aria-selected="true"] {
+  background: #c7ed84;
+  color: #17220d;
+  border-color: #c7ed84;
+}
+.help-guide h3 {
+  font-size: 17px;
+  font-weight: 650;
+  margin: 24px 0 10px;
+}
+.help-guide ol,
+.help-guide ul {
+  padding-left: 24px;
+  color: #a6b19f;
+  line-height: 1.65;
+  margin: 16px 0;
+}
+.help-guide ol {
+  list-style: decimal;
+}
+.help-guide ul {
+  list-style: disc;
+}
+.help-guide li + li {
+  margin-top: 10px;
+}
+.help-guide strong {
+  color: #f3f6ef;
+  font-weight: 650;
+}
+.data-information {
+  border: 1px solid #526340;
+  border-left: 3px solid #c7ed84;
+  background: #20291b;
+  border-radius: 18px;
+  padding: 22px;
+  margin-top: 20px;
+}
+.data-information small {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #c7ed84;
+}
+@media (prefers-color-scheme: light) {
+  .shell[data-theme="system"] .help-guide strong {
+    color: #17220d;
+  }
+  .shell[data-theme="system"] .help-guide ol,
+  .shell[data-theme="system"] .help-guide ul {
+    color: #43533a;
+  }
+  .shell[data-theme="system"] .data-information {
+    background: #e3eadb;
+  }
+}
 @media (prefers-color-scheme: light) {
   .shell[data-theme="system"] {
     color: #17220d;
