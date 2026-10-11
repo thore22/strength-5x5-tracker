@@ -91,7 +91,7 @@ export default function App() {
     <div className="shell" data-theme={data?.settings.theme ?? "dark"}>
       <header>
         <span className="brand">
-          STRENGTH <b>5×5</b>
+          5x5 <b>gromritt</b>
         </span>
         <small>YOUR TRAINING. YOUR PACE.</small>
       </header>
