@@ -11,3 +11,15 @@ Cloudflare Pages must use native Git integration with this private repository, p
 
 ## Data safety
 History and unfinished workouts are stored with exercise snapshots. Template edits never rewrite history. Storage failures stop writes and display an error. Keep JSON backups in Files/iCloud Drive.
+
+## Install and test on iPhone
+Open the production URL in Safari. Use Share → Add to Home Screen → Add. Open the Home Screen app online once, then reopen in Airplane Mode and log a test session. Start with your own working weights in Program.
+
+In Settings, Generate JSON backup, then Share to Files (when offered) or use the download fallback. Save to Files/iCloud Drive and confirm the file exists. Choose that `.json` file using the native file picker, inspect its preview, and explicitly restore it. Export the current database first. A recovery snapshot is retained locally before each replacement.
+
+Timers use real timestamps; sound and vibration are best effort while the app is foregrounded. This app has no background push notification service. Browser storage can be evicted; persistent-storage requests are best effort and external backups remain essential. Production and previews have separate IndexedDB stores: always train on production.
+
+## Verification
+`npm test` covers engine rules, deloads, warm-ups, persistence, migration, backup integrity/restore and history edits. `npm run test:e2e` tests touch-sized Chromium layouts, offline operation, JSON import/export, recovery across reloads and service-worker deployment updates. Install its test browser with `npx playwright install chromium` first. CI runs both suites and the build. These automated tests are **not** physical iPhone/Safari verification; device installation, native Files/iCloud sharing, audio and storage behavior must still be checked on an iPhone.
+
+Backup v2 uses full nested validation and a SHA-256 corruption check. The documented legacy v1 format uses `format: strength-tracker`, `version: 1`, an ISO `exportedAt` and a complete v1 data state. Migration adds missing timer/reminder metadata without dropping training data. Unknown future versions are rejected. Checksums detect corruption, not authenticity.
