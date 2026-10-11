@@ -195,7 +195,6 @@ export function freshState(): State {
     rx("bench", true, 5, 5),
     rx("row", true, 5, 5),
     rx("dips", false, 3, 6, 10),
-    rx("curl", false, 3, 8, 12),
     rx("leg-raise", false, 3, 8, 15),
   ];
   const B = [
@@ -203,7 +202,6 @@ export function freshState(): State {
     rx("ohp", true, 5, 5),
     rx("deadlift", true, 1, 5),
     rx("pullups", false, 3, 5, 10),
-    rx("rdl", false, 2, 8, 10),
     rx("lateral", false, 3, 10, 15),
   ];
   B[2].rule.increment = 5;
