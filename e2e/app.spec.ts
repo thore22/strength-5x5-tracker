@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 async function savedTimer(
   page: import("@playwright/test").Page,
 ): Promise<number | null> {
@@ -83,6 +83,121 @@ test("custom colors persist, preserve an active session, and reset to defaults",
     "rgb(199, 237, 132)",
   );
   await page.reload();
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Barbell Back Squat set 1", exact: true }),
+  ).toHaveClass("done");
+});
+
+test("progress reset requires confirmation, persists, and remains restorable from an external backup", async ({
+  page,
+}, testInfo) => {
+  await start(page);
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Finish workout", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Complete & save", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Start Workout B →", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.locator("#recovery-description")).toContainText(
+    "Nothing is replaced until you confirm",
+  );
+  await expect(page.locator("#persistent-storage-description")).toContainText(
+    "does not create a backup",
+  );
+  await page
+    .getByRole("button", { name: "Reset all progress", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Delete progress permanently",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Cancel reset", exact: true }).click();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Barbell Back Squat set 1", exact: true }),
+  ).toHaveClass("done");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Reset all progress", exact: true })
+    .click();
+  const downloadBefore = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Download backup before reset", exact: true })
+    .click();
+  const beforePath = testInfo.outputPath("before-reset.json");
+  await (await downloadBefore).saveAs(beforePath);
+  const before = JSON.parse(await readFile(beforePath, "utf8")).data;
+  await page.locator("input[type=file]").setInputFiles(beforePath);
+  await page
+    .getByRole("button", { name: "Replace with this backup", exact: true })
+    .click();
+  await page.getByLabel("Type RESET to confirm", { exact: true }).fill("RESET");
+  await page.screenshot({
+    path: "test-results/reset-confirmation.png",
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Delete progress permanently", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText("Progress reset");
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Start Workout A →", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page
+    .getByRole("button", {
+      name: "Preview pre-restore recovery snapshot",
+      exact: true,
+    })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "No pre-restore snapshot exists",
+  );
+  const downloadAfter = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Generate JSON backup", exact: true })
+    .click();
+  const afterPath = testInfo.outputPath("after-reset.json");
+  await (await downloadAfter).saveAs(afterPath);
+  const after = JSON.parse(await readFile(afterPath, "utf8")).data;
+  expect(after.history).toEqual([]);
+  expect(after.active).toBeNull();
+  expect(after.timerEnd).toBeNull();
+  expect(after.templates).toEqual(before.templates);
+  expect(after.exercises).toEqual(before.exercises);
+  expect(after.settings).toEqual(before.settings);
+  for (const [id, value] of Object.entries(after.progression) as [
+    string,
+    {
+      weight: number;
+      successes: number;
+      failures: number;
+      suggestion: number | null;
+    },
+  ][]) {
+    expect(value.weight).toBe(before.progression[id].weight);
+    expect(value.successes).toBe(0);
+    expect(value.failures).toBe(0);
+    expect(value.suggestion).toBeNull();
+  }
+  await page.locator("input[type=file]").setInputFiles(beforePath);
+  await page
+    .getByRole("button", { name: "Replace with this backup", exact: true })
+    .click();
   await page.getByRole("button", { name: "Workout", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Barbell Back Squat set 1", exact: true }),
