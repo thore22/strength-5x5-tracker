@@ -11,8 +11,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ["icon.svg", "apple-touch-icon.png"],
       manifest: {
-        name: "Strength — 5×5 Tracker",
-        short_name: "Strength",
+        name: "5x5 gromritt",
+        short_name: "5x5 gromritt",
         description: "Your personal offline strength training log",
         theme_color: "#101310",
         background_color: "#101310",

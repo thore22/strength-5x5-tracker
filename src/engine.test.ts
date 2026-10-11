@@ -8,6 +8,7 @@ import {
   remainingSeconds,
   startSession,
   warmups,
+  tapWorkingSet,
 } from "./engine";
 import { initialLift } from "./model";
 function attempt(reps = 5) {
@@ -20,6 +21,29 @@ function attempt(reps = 5) {
   return l;
 }
 describe("progression", () => {
+  it("first set tap logs target reps and subsequent taps reduce reps without restarting rest", () => {
+    const s = freshState();
+    startSession(s, "A");
+    tapWorkingSet(s, 0, 0, 1000);
+    expect(s.active!.lifts[0].sets[0].reps).toBe(5);
+    expect(s.timerEnd).toBe(181000);
+    tapWorkingSet(s, 0, 0, 5000);
+    expect(s.active!.lifts[0].sets[0].reps).toBe(4);
+    expect(s.timerEnd).toBe(181000);
+    for (let i = 0; i < 6; i++) tapWorkingSet(s, 0, 0, 6000);
+    expect(s.active!.lifts[0].sets[0].reps).toBe(0);
+    expect(s.timerEnd).toBe(181000);
+  });
+  it("set corrections remain genuine failures and survive completion", () => {
+    const s = freshState();
+    startSession(s, "A");
+    for (let j = 0; j < 5; j++) tapWorkingSet(s, 0, j);
+    tapWorkingSet(s, 0, 0);
+    finishSession(s);
+    expect(s.history[0].lifts[0].sets[0].reps).toBe(4);
+    expect(s.progression.squat.failures).toBe(1);
+    expect(s.progression.squat.weight).toBe(20);
+  });
   it("deload never targets less than the bar and rounds from the minimum load", () => {
     const l = attempt(4);
     const state = initialLift();

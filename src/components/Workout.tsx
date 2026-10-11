@@ -4,6 +4,7 @@ import {
   finishSession,
   remainingSeconds,
   startSession,
+  tapWorkingSet,
 } from "../engine";
 import type { State } from "../model";
 import type { Change } from "./Program";
@@ -173,11 +174,11 @@ export default function Workout({
               onClick={() =>
                 change((s) => {
                   s.timerEnd =
-                    Math.max(Date.now(), s.timerEnd ?? Date.now()) + 30000;
+                    Math.max(Date.now(), s.timerEnd ?? Date.now()) + 15000;
                 })
               }
             >
-              +30s
+              +15s
             </button>
             <button
               disabled={busy}
@@ -185,12 +186,12 @@ export default function Workout({
                 change((s) => {
                   s.timerEnd = Math.max(
                     Date.now(),
-                    (s.timerEnd ?? Date.now()) - 30000,
+                    (s.timerEnd ?? Date.now()) - 15000,
                   );
                 })
               }
             >
-              −30s
+              −15s
             </button>
             <button
               disabled={busy}
@@ -321,19 +322,10 @@ export default function Workout({
                         : "failed"
                   }
                   aria-label={`${lift.exercise.name} set ${j + 1}`}
+                  aria-description="First tap logs target reps and starts rest. Further taps reduce reps by one, down to zero, without restarting rest."
                   disabled={busy || a.paused || lift.skipped}
                   key={j}
-                  onClick={() =>
-                    change((s) => {
-                      const target = s.active!.lifts[i].sets[j];
-                      target.reps =
-                        target.reps === null ? lift.prescription.minReps : null;
-                      s.timerEnd =
-                        target.reps !== null
-                          ? Date.now() + lift.prescription.rest * 1000
-                          : null;
-                    })
-                  }
+                  onClick={() => change((s) => tapWorkingSet(s, i, j))}
                 >
                   <small>SET {j + 1}</small>
                   <strong>{set.reps ?? "○"}</strong>

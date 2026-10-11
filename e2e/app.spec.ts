@@ -1,5 +1,31 @@
 import { test, expect } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
+async function savedTimer(
+  page: import("@playwright/test").Page,
+): Promise<number | null> {
+  return page.evaluate(
+    () =>
+      new Promise<number | null>((resolve, reject) => {
+        const open = indexedDB.open("strength-tracker", 2);
+        open.onsuccess = () => {
+          const db = open.result;
+          const request = db
+            .transaction("state")
+            .objectStore("state")
+            .get("current");
+          request.onsuccess = () => {
+            resolve(request.result.state.timerEnd);
+            db.close();
+          };
+          request.onerror = () => {
+            reject(request.error);
+            db.close();
+          };
+        };
+        open.onerror = () => reject(open.error);
+      }),
+  );
+}
 async function start(page: import("@playwright/test").Page) {
   await page.goto("/");
   await page
@@ -36,6 +62,64 @@ test("logging survives refresh and template changes preserve history", async ({
   await expect(
     page.getByRole("heading", { name: "Barbell Back Squat", exact: true }),
   ).toBeVisible();
+});
+test("set-box taps reduce reps to zero, keep rest unchanged and retain the edit menu", async ({
+  page,
+}) => {
+  await start(page);
+  const set = page.getByRole("button", {
+    name: "Barbell Back Squat set 1",
+    exact: true,
+  });
+  await set.click();
+  await expect(set.locator("strong")).toHaveText("5");
+  const timer = await savedTimer(page);
+  await set.click();
+  await expect(set.locator("strong")).toHaveText("4");
+  expect(await savedTimer(page)).toBe(timer);
+  await page.reload();
+  await expect(set.locator("strong")).toHaveText("4");
+  for (let i = 0; i < 5; i++) await set.click();
+  await expect(set.locator("strong")).toHaveText("0");
+  expect(await savedTimer(page)).toBe(timer);
+  const lift = page
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", {
+        name: "Barbell Back Squat",
+        exact: true,
+      }),
+    });
+  await lift.getByText("Edit reps / load per set", { exact: true }).click();
+  const form = lift.locator("form").first();
+  await form.locator("input[name=reps]").fill("3");
+  await form.getByRole("button", { name: "Log", exact: true }).click();
+  await expect(set.locator("strong")).toHaveText("3");
+});
+test("timer stays below simulated iPhone safe area when scrolling and adjusts by 15 seconds", async ({
+  page,
+}) => {
+  await start(page);
+  await page.addStyleTag({ content: "html { --safe-area-top: 44px; }" });
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+    .click();
+  const original = (await savedTimer(page))!;
+  await page.getByRole("button", { name: "+15s", exact: true }).click();
+  expect(await savedTimer(page)).toBe(original + 15000);
+  await page.getByRole("button", { name: "−15s", exact: true }).click();
+  expect(await savedTimer(page)).toBe(original);
+  await page
+    .getByRole("button", { name: "Skip exercise", exact: true })
+    .last()
+    .scrollIntoViewIfNeeded();
+  const box = (await page.locator(".timer").boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(56);
+  expect(box.y + box.height).toBeLessThan(720);
+  await expect(
+    page.getByRole("button", { name: "+15s", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({ path: "test-results/timer-safe-area.png" });
 });
 test("offline reload, logging and history work after service worker caching", async ({
   page,
@@ -116,6 +200,13 @@ test("responsive screens have no horizontal overflow and installable manifest as
   }
   const manifest = await (await request.get("/manifest.webmanifest")).json();
   expect(manifest.display).toBe("standalone");
+  expect(manifest.name).toBe("5x5 gromritt");
+  expect(manifest.short_name).toBe("5x5 gromritt");
+  await expect(page).toHaveTitle("5x5 gromritt");
+  await expect(page.getByRole("banner")).toContainText("5x5 gromritt");
+  await expect(
+    page.locator("meta[name=apple-mobile-web-app-title]"),
+  ).toHaveAttribute("content", "5x5 gromritt");
   for (const icon of manifest.icons)
     expect((await request.get(icon.src)).status()).toBe(200);
   await page.screenshot({

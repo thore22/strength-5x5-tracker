@@ -8,6 +8,23 @@ import {
 } from "./model";
 const round = (n: number, step: number) =>
   Number((Math.round(n / step) * step).toFixed(6));
+export function tapWorkingSet(
+  s: State,
+  liftIndex: number,
+  setIndex: number,
+  now = Date.now(),
+): void {
+  const session = s.active;
+  const lift = session?.lifts[liftIndex];
+  const set = lift?.sets[setIndex];
+  if (!session || session.paused || !lift || lift.skipped || !set) return;
+  if (set.reps === null) {
+    set.reps = lift.prescription.minReps;
+    s.timerEnd = now + lift.prescription.rest * 1000;
+  } else {
+    set.reps = Math.max(0, set.reps - 1);
+  }
+}
 export function warmups(
   weight: number,
   settings: Settings,
