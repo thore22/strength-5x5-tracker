@@ -32,6 +32,63 @@ async function start(page: import("@playwright/test").Page) {
     .getByRole("button", { name: "Start Workout A →", exact: true })
     .click();
 }
+test("custom colors persist, preserve an active session, and reset to defaults", async ({
+  page,
+}) => {
+  await start(page);
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  const primary = page.getByLabel("Primary color", { exact: true });
+  const secondary = page.getByLabel("Secondary color", { exact: true });
+  await primary.fill("#220044");
+  await expect(primary).toBeEnabled();
+  await page.emulateMedia({ colorScheme: "light" });
+  await page
+    .getByRole("combobox", { name: "Theme", exact: true })
+    .selectOption("system");
+  await page
+    .getByRole("button", { name: "Save preferences", exact: true })
+    .click();
+  await expect(page.locator(".shell")).toHaveCSS("color", "rgb(23, 34, 13)");
+  await secondary.fill("#ffffff");
+  await expect(page.locator(".appearance-preview")).toHaveCSS(
+    "background-color",
+    "rgb(242, 242, 242)",
+  );
+  await expect(page.locator(".preview-chip")).toHaveCSS(
+    "background-color",
+    "rgb(34, 0, 68)",
+  );
+  await expect(page.locator(".preview-chip")).toHaveCSS(
+    "color",
+    "rgb(255, 255, 255)",
+  );
+  await page.screenshot({
+    path: "test-results/custom-appearance.png",
+    fullPage: true,
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(primary).toHaveValue("#220044");
+  await expect(secondary).toHaveValue("#ffffff");
+  await page
+    .getByRole("button", { name: "Reset colors to defaults", exact: true })
+    .click();
+  await expect(primary).toHaveValue("#c7ed84");
+  await expect(secondary).toHaveValue("#191f16");
+  await expect(page.locator(".preview-chip")).toHaveCSS(
+    "background-color",
+    "rgb(199, 237, 132)",
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Barbell Back Squat set 1", exact: true }),
+  ).toHaveClass("done");
+});
+
 test("logging survives refresh and template changes preserve history", async ({
   page,
 }) => {

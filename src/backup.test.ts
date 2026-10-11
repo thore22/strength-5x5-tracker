@@ -17,6 +17,8 @@ describe("complete backup and recovery", () => {
     s.active!.lifts[0].sets[0].reps = 4;
     s.timerEnd = Date.now() + 10000;
     s.settings.audio = true;
+    s.settings.primaryColor = "#e040fb";
+    s.settings.secondaryColor = "#151525";
     const result = await parseBackup(await makeBackup(s));
     expect(result.state).toEqual(s);
   });

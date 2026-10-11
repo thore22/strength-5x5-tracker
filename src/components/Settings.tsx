@@ -4,6 +4,7 @@ import type { State } from "../model";
 import type { Change } from "./Program";
 import { recoveryState } from "../storage";
 import Help from "./Help";
+import { defaultPrimary, defaultSecondary } from "../appearance";
 export default function Settings({
   data,
   change,
@@ -249,6 +250,64 @@ export default function Settings({
             Switching units converts stored loads without changing performance.
             Finish your active session first.
           </p>
+        </article>
+        <article>
+          <h2>Appearance</h2>
+          <p>
+            Changes preview immediately and save automatically on this device.
+            Text contrast adjusts for your colors. Custom background colors
+            override the system theme palette.
+          </p>
+          <div className="fields">
+            <label>
+              Primary color
+              <input
+                type="color"
+                aria-label="Primary color"
+                value={data.settings.primaryColor ?? defaultPrimary}
+                disabled={busy}
+                onChange={(e) => {
+                  const color = e.target.value;
+                  void change((s) => {
+                    s.settings.primaryColor = color;
+                  });
+                }}
+              />
+              <span>Buttons, completed sets, and highlights</span>
+            </label>
+            <label>
+              Secondary color
+              <input
+                type="color"
+                aria-label="Secondary color"
+                value={data.settings.secondaryColor ?? defaultSecondary}
+                disabled={busy}
+                onChange={(e) => {
+                  const color = e.target.value;
+                  void change((s) => {
+                    s.settings.secondaryColor = color;
+                  });
+                }}
+              />
+              <span>Backgrounds, cards, and supporting elements</span>
+            </label>
+          </div>
+          <div className="appearance-preview" aria-label="Color preview">
+            <strong>Color preview</strong>
+            <p>Your training, in your colors.</p>
+            <span className="primary preview-chip">Completed set · 5 reps</span>
+          </div>
+          <button
+            disabled={busy}
+            onClick={() =>
+              void change((s) => {
+                delete s.settings.primaryColor;
+                delete s.settings.secondaryColor;
+              })
+            }
+          >
+            Reset colors to defaults
+          </button>
         </article>
         <article>
           <h2>Backup & Restore</h2>
