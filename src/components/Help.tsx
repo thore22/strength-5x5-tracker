@@ -54,13 +54,18 @@ export default function Help() {
         <ul>
           <li>
             Tap a working-set box to log the target reps. Further taps reduce
-            the count by one, down to zero.
+            the count by one, down to zero. Tap again after zero to return to
+            the target reps without restarting rest.
           </li>
           <li>
             Open <strong>Edit reps / load per set</strong> to enter other rep
             counts or loads.
           </li>
-          <li>Warm-ups are separate and do not affect progression.</li>
+          <li>
+            Tap <strong>Warm-up sets</strong> on core barbell exercises to view
+            warm-ups. When no lighter sets can be generated, the panel explains
+            why. Warm-ups are separate and do not affect progression.
+          </li>
           <li>
             Logging a set starts rest. Use <strong>+15s</strong>,{" "}
             <strong>−15s</strong>, or <strong>Stop</strong>; reducing reps
@@ -106,8 +111,9 @@ export default function Help() {
         <h3>Settings — preferences, backups, and help</h3>
         <p>
           Configure units, equipment defaults, timer notifications, theme, and
-          storage protection. Individual exercise rest periods remain
-          configurable in <strong>Program</strong>.
+          storage protection. Saving preferences applies the default rest time
+          to A/B exercises for future workouts. You can then set individual
+          exercise rest periods in <strong>Program</strong>.
         </p>
         <p>
           In <strong>Backup &amp; Restore</strong>, generate a complete JSON

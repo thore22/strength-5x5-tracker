@@ -9,6 +9,7 @@ import {
   startSession,
   warmups,
   tapWorkingSet,
+  applyDefaultRest,
 } from "./engine";
 import { initialLift } from "./model";
 function attempt(reps = 5) {
@@ -30,9 +31,52 @@ describe("progression", () => {
     tapWorkingSet(s, 0, 0, 5000);
     expect(s.active!.lifts[0].sets[0].reps).toBe(4);
     expect(s.timerEnd).toBe(181000);
-    for (let i = 0; i < 6; i++) tapWorkingSet(s, 0, 0, 6000);
+    for (let i = 0; i < 4; i++) tapWorkingSet(s, 0, 0, 6000);
     expect(s.active!.lifts[0].sets[0].reps).toBe(0);
     expect(s.timerEnd).toBe(181000);
+    tapWorkingSet(s, 0, 0, 10000);
+    expect(s.active!.lifts[0].sets[0].reps).toBe(5);
+    expect(s.timerEnd).toBe(181000);
+  });
+  it("accessory reps cycle back to the first-tap target and retain the rest deadline", () => {
+    const s = freshState();
+    startSession(s, "A");
+    tapWorkingSet(s, 3, 0, 1000);
+    expect(s.active!.lifts[3].sets[0].reps).toBe(6);
+    const timer = s.timerEnd;
+    for (let i = 0; i < 6; i++) tapWorkingSet(s, 3, 0, 2000);
+    expect(s.active!.lifts[3].sets[0].reps).toBe(0);
+    tapWorkingSet(s, 3, 0, 3000);
+    expect(s.active!.lifts[3].sets[0].reps).toBe(6);
+    expect(s.timerEnd).toBe(timer);
+  });
+  it("global rest updates future A/B prescriptions without changing saved sessions or progression", () => {
+    const s = freshState();
+    startSession(s, "A");
+    finishSession(s);
+    startSession(s, "B");
+    tapWorkingSet(s, 0, 0, 1000);
+    const before = structuredClone(s);
+    applyDefaultRest(s, 65);
+    expect(s.settings.defaultRest).toBe(65);
+    expect(
+      Object.values(s.templates)
+        .flat()
+        .every((p) => p.rest === 65),
+    ).toBe(true);
+    expect(s.history).toEqual(before.history);
+    expect(s.active).toEqual(before.active);
+    expect(s.progression).toEqual(before.progression);
+    expect(s.timerEnd).toBe(before.timerEnd);
+    discardSession(s);
+    startSession(s, "A");
+    tapWorkingSet(s, 0, 0, 1000);
+    expect(s.timerEnd).toBe(66000);
+    discardSession(s);
+    s.templates.B[0].rest = 30;
+    startSession(s, "B");
+    tapWorkingSet(s, 0, 0, 1000);
+    expect(s.timerEnd).toBe(31000);
   });
   it("set corrections remain genuine failures and survive completion", () => {
     const s = freshState();

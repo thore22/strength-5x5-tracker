@@ -251,8 +251,11 @@ test("set-box taps reduce reps to zero, keep rest unchanged and retain the edit 
   expect(await savedTimer(page)).toBe(timer);
   await page.reload();
   await expect(set.locator("strong")).toHaveText("4");
-  for (let i = 0; i < 5; i++) await set.click();
+  for (let i = 0; i < 4; i++) await set.click();
   await expect(set.locator("strong")).toHaveText("0");
+  expect(await savedTimer(page)).toBe(timer);
+  await set.click();
+  await expect(set.locator("strong")).toHaveText("5");
   expect(await savedTimer(page)).toBe(timer);
   const lift = page.locator("article").filter({
     has: page.getByRole("heading", {
@@ -266,6 +269,154 @@ test("set-box taps reduce reps to zero, keep rest unchanged and retain the edit 
   await form.getByRole("button", { name: "Log", exact: true }).click();
   await expect(set.locator("strong")).toHaveText("3");
 });
+test("global rest applies to future A/B workouts while an active workout keeps its rest", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page
+    .getByRole("spinbutton", { name: "Default rest seconds", exact: true })
+    .fill("60");
+  await page
+    .getByRole("button", { name: "Save preferences", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Start Workout A →", exact: true })
+    .click();
+  const warmups = page.getByRole("button", {
+    name: "Warm-up sets for Barbell Back Squat",
+    exact: true,
+  });
+  await expect(warmups).toBeVisible();
+  expect((await warmups.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+  await warmups.click();
+  await expect(page.locator("#warmups-squat")).toContainText(
+    "No lighter warm-up sets can be generated",
+  );
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+    .click();
+  expect((await savedTimer(page))! - Date.now()).toBeGreaterThan(55000);
+  expect((await savedTimer(page))! - Date.now()).toBeLessThanOrEqual(60000);
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page
+    .getByRole("spinbutton", { name: "Default rest seconds", exact: true })
+    .fill("120");
+  await page
+    .getByRole("button", { name: "Save preferences", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 2", exact: true })
+    .click();
+  expect((await savedTimer(page))! - Date.now()).toBeLessThanOrEqual(60000);
+  await page.getByRole("button", { name: "Discard", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Discard session", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Workout B", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Start Workout B →", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Pull-ups set 1", exact: true })
+    .click();
+  expect((await savedTimer(page))! - Date.now()).toBeGreaterThan(115000);
+  expect((await savedTimer(page))! - Date.now()).toBeLessThanOrEqual(120000);
+});
+
+test("warm-up button expands generated sets and preserves their edits without logging working sets", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Program", exact: true }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  await page
+    .getByRole("spinbutton", { name: "Next working weight", exact: true })
+    .fill("100");
+  await page
+    .getByRole("button", { name: "Save prescription", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Start Workout A →", exact: true })
+    .click();
+  const toggle = page.getByRole("button", {
+    name: "Warm-up sets for Barbell Back Squat",
+    exact: true,
+  });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  const panel = page.locator("#warmups-squat");
+  await expect(panel.locator(".row")).toHaveCount(4);
+  await page
+    .getByRole("button", { name: "Warm-up 1 Barbell Back Squat", exact: true })
+    .click();
+  await page
+    .getByRole("spinbutton", {
+      name: "Warm-up 1 weight Barbell Back Squat",
+      exact: true,
+    })
+    .fill("25");
+  await page
+    .getByRole("spinbutton", {
+      name: "Warm-up 1 reps Barbell Back Squat",
+      exact: true,
+    })
+    .fill("4");
+  await page
+    .getByRole("spinbutton", {
+      name: "Warm-up 1 reps Barbell Back Squat",
+      exact: true,
+    })
+    .blur();
+  await expect(
+    page.getByRole("button", {
+      name: "Warm-up 1 Barbell Back Squat",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await panel.getByRole("button", { name: "Skip", exact: true }).nth(1).click();
+  await expect(
+    panel.getByRole("button", { name: "Unskip", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await toggle.click();
+  await expect(
+    page.getByRole("button", {
+      name: "Warm-up 1 Barbell Back Squat",
+      exact: true,
+    }),
+  ).toHaveText("✓");
+  await expect(
+    page.getByRole("spinbutton", {
+      name: "Warm-up 1 weight Barbell Back Squat",
+      exact: true,
+    }),
+  ).toHaveValue("25");
+  await expect(
+    page.getByRole("spinbutton", {
+      name: "Warm-up 1 reps Barbell Back Squat",
+      exact: true,
+    }),
+  ).toHaveValue("4");
+  await expect(
+    panel.getByRole("button", { name: "Unskip", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+      .locator("strong"),
+  ).toHaveText("○");
+  expect(await savedTimer(page)).toBeNull();
+  await panel
+    .locator("..")
+    .screenshot({ path: "test-results/warm-up-controls.png" });
+  await toggle.click();
+  await expect(panel).toBeHidden();
+});
+
 test("timer stays below simulated iPhone safe area when scrolling and adjusts by 15 seconds", async ({
   page,
 }) => {

@@ -22,8 +22,13 @@ export function tapWorkingSet(
     set.reps = lift.prescription.minReps;
     s.timerEnd = now + lift.prescription.rest * 1000;
   } else {
-    set.reps = Math.max(0, set.reps - 1);
+    set.reps = set.reps === 0 ? lift.prescription.minReps : set.reps - 1;
   }
+}
+export function applyDefaultRest(s: State, seconds: number): void {
+  s.settings.defaultRest = seconds;
+  for (const prescription of Object.values(s.templates).flat())
+    prescription.rest = seconds;
 }
 export function warmups(
   weight: number,

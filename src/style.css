@@ -176,6 +176,14 @@ input[type="color"] {
   margin: 20px 0;
   flex-wrap: wrap;
 }
+.warmup-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  color: var(--accent, #c7ed84);
+}
 .sets button {
   width: 60px;
   min-height: 70px;
