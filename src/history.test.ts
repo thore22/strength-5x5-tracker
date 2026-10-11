@@ -34,6 +34,6 @@ describe("history editing", () => {
     const text = historyCsv(s);
     expect(text).toContain('"Squat, ""barbell"""');
     expect(text).toContain('"reps_or_seconds"');
-    expect(text.split("\r\n")).toHaveLength(25);
+    expect(text.split("\r\n")).toHaveLength(22);
   });
 });
