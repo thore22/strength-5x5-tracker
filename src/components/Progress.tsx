@@ -299,13 +299,25 @@ function Chart({
       className="chart"
       viewBox={`0 0 ${w} ${h}`}
       role="img"
-      aria-label="Exercise weight over time. Green success, orange failure, outlined circles deload."
+      aria-label="Exercise weight over time. Accent-colored circles indicate success, orange indicates failure, outlined circles indicate deload."
     >
-      <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#526340" />
+      <line
+        x1={pad}
+        y1={h - pad}
+        x2={w - pad}
+        y2={h - pad}
+        stroke="var(--border, #526340)"
+      />
       {[minW, (minW + maxW) / 2, maxW].map((n) => (
         <g key={n}>
-          <line x1={pad} y1={y(n)} x2={w - pad} y2={y(n)} stroke="#30392a" />
-          <text x="0" y={y(n) + 4} fill="#a6b19f" fontSize="11">
+          <line
+            x1={pad}
+            y1={y(n)}
+            x2={w - pad}
+            y2={y(n)}
+            stroke="var(--border, #30392a)"
+          />
+          <text x="0" y={y(n) + 4} fill="var(--muted, #a6b19f)" fontSize="11">
             {n.toFixed(1)}
           </text>
         </g>
@@ -313,7 +325,7 @@ function Chart({
       <polyline
         points={samples.map((s) => `${x(s.date)},${y(s.weight)}`).join(" ")}
         fill="none"
-        stroke="#c7ed84"
+        stroke="var(--accent, #c7ed84)"
         strokeWidth="2"
       />
       {samples.map((s, i) => (
@@ -322,8 +334,8 @@ function Chart({
           cx={x(s.date)}
           cy={y(s.weight)}
           r={s.deload ? 7 : 4}
-          fill={s.success ? "#c7ed84" : "#ee9b78"}
-          stroke={s.deload ? "#fff" : "none"}
+          fill={s.success ? "var(--accent, #c7ed84)" : "#ee9b78"}
+          stroke={s.deload ? "var(--text, #fff)" : "none"}
           strokeWidth="2"
         >
           <title>
@@ -332,14 +344,14 @@ function Chart({
           </title>
         </circle>
       ))}
-      <text x={pad} y={h - 10} fill="#a6b19f" fontSize="11">
+      <text x={pad} y={h - 10} fill="var(--muted, #a6b19f)" fontSize="11">
         {new Date(minT).toLocaleDateString()}
       </text>
       <text
         x={w - pad}
         y={h - 10}
         textAnchor="end"
-        fill="#a6b19f"
+        fill="var(--muted, #a6b19f)"
         fontSize="11"
       >
         {new Date(maxT).toLocaleDateString()}

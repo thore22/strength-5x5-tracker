@@ -72,6 +72,8 @@ export interface Settings {
   audio: boolean;
   vibration: boolean;
   theme: "dark" | "system";
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 export interface State {
   schemaVersion: 2;

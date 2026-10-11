@@ -8,6 +8,7 @@ import Progress from "./components/Progress";
 import Recovery from "./components/Recovery";
 import { backupDue } from "./backup";
 import { activateUpdate, updateAvailable } from "./pwa";
+import { appearanceVariables } from "./appearance";
 export default function App() {
   const [data, setData] = useState<State | null>(null),
     [page, setPage] = useState("Workout"),
@@ -18,6 +19,20 @@ export default function App() {
     [updateReady, setUpdateReady] = useState(updateAvailable);
   const current = useRef<{ state: State; revision: number } | null>(null),
     queue = useRef<Promise<void>>(Promise.resolve());
+  useEffect(() => {
+    const variables = appearanceVariables(data?.settings ?? {});
+    for (const [key, value] of Object.entries(variables))
+      document.documentElement.style.setProperty(key, value);
+    document.documentElement.toggleAttribute(
+      "data-custom-secondary",
+      !!data?.settings.secondaryColor,
+    );
+    return () => {
+      for (const key of Object.keys(variables))
+        document.documentElement.style.removeProperty(key);
+      document.documentElement.removeAttribute("data-custom-secondary");
+    };
+  }, [data?.settings.primaryColor, data?.settings.secondaryColor]);
   useEffect(() => {
     void navigator.storage?.persist?.().catch(() => {});
     loadState()

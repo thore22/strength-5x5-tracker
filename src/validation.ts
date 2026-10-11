@@ -125,6 +125,14 @@ export const stateSchema = z
         audio: z.boolean(),
         vibration: z.boolean(),
         theme: z.enum(["dark", "system"]),
+        primaryColor: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .optional(),
+        secondaryColor: z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .optional(),
       })
       .strict(),
     timerEnd: timestamp.nullable(),
