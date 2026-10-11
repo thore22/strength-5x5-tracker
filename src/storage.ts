@@ -77,6 +77,7 @@ export async function saveState(
   expectedRevision: number,
   name = DB_NAME,
   recovery = false,
+  clearRecovery = false,
 ): Promise<number> {
   validateState(state);
   const db = await openDatabase(name);
@@ -96,6 +97,7 @@ export async function saveState(
         }
         if (recovery && r.result)
           tx.objectStore("recovery").put(r.result, "before-restore");
+        if (clearRecovery) tx.objectStore("recovery").clear();
         s.put({ state, revision: expectedRevision + 1 }, "current");
       };
       tx.oncomplete = () => resolve(expectedRevision + 1);

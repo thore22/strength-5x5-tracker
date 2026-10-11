@@ -9,6 +9,7 @@ import Recovery from "./components/Recovery";
 import { backupDue } from "./backup";
 import { activateUpdate, updateAvailable } from "./pwa";
 import { appearanceVariables } from "./appearance";
+import { resetProgress } from "./reset";
 export default function App() {
   const [data, setData] = useState<State | null>(null),
     [page, setPage] = useState("Workout"),
@@ -48,7 +49,7 @@ export default function App() {
       })
       .catch((e) => setError(String(e)));
   }, []);
-  async function change(fn: (s: State) => void) {
+  async function change(fn: (s: State) => void, clearRecovery = false) {
     if (!current.current) return false;
     setBusy(true);
     let saved = false;
@@ -56,7 +57,13 @@ export default function App() {
       try {
         const s = structuredClone(current.current!.state);
         fn(s);
-        const revision = await saveState(s, current.current!.revision);
+        const revision = await saveState(
+          s,
+          current.current!.revision,
+          undefined,
+          false,
+          clearRecovery,
+        );
         current.current = { state: s, revision };
         setData(s);
         setError("");
@@ -189,6 +196,7 @@ export default function App() {
               data={data}
               change={change}
               restore={restore}
+              reset={() => change(resetProgress, true)}
               busy={busy}
             />
           )}

@@ -9,11 +9,13 @@ export default function Settings({
   data,
   change,
   restore,
+  reset,
   busy,
 }: {
   data: State;
   change: Change;
   restore: (s: State) => Promise<void>;
+  reset: () => Promise<boolean>;
   busy: boolean;
 }) {
   const [pending, setPending] = useState<Awaited<
@@ -23,7 +25,10 @@ export default function Settings({
     [notice, setNotice] = useState(""),
     [storage, setStorage] = useState("Checking…"),
     [backupFile, setBackupFile] = useState<File | null>(null),
-    [section, setSection] = useState<"preferences" | "help">("preferences");
+    [section, setSection] = useState<"preferences" | "help">("preferences"),
+    [confirmReset, setConfirmReset] = useState(false),
+    [resetText, setResetText] = useState(""),
+    [resetNotice, setResetNotice] = useState("");
   async function storageStatus() {
     try {
       const persistent = await navigator.storage?.persisted?.();
@@ -429,6 +434,7 @@ export default function Settings({
         <article>
           <h2>Storage & recovery</h2>
           <button
+            aria-describedby="recovery-description"
             disabled={busy}
             onClick={async () => {
               try {
@@ -449,8 +455,14 @@ export default function Settings({
           >
             Preview pre-restore recovery snapshot
           </button>
+          <p id="recovery-description">
+            Preview the local copy saved before your most recent backup restore.
+            Nothing is replaced until you confirm. Available only after a
+            restore.
+          </p>
           <p>{storage}</p>
           <button
+            aria-describedby="persistent-storage-description"
             onClick={async () => {
               try {
                 const granted = await navigator.storage?.persist?.();
@@ -467,11 +479,100 @@ export default function Settings({
           >
             Request persistent storage
           </button>
+          <p id="persistent-storage-description">
+            Ask the browser to protect local data from automatic removal when
+            space is low. Approval is browser-dependent; this does not create a
+            backup or protect against clearing website data.
+          </p>
           <p>
             Use the same production URL every time. Browser data can be lost if
             website data is cleared or the device removes it. Restore a JSON
             backup above if your history disappears.
           </p>
+        </article>
+        <article>
+          <h2>Reset progress</h2>
+          {resetNotice && <p role="status">{resetNotice}</p>}
+          <p>
+            Clear progress stored in this browser or PWA on this device. Your
+            exercise catalog, workout templates, current working weights, and
+            preferences stay in place.
+          </p>
+          {!confirmReset ? (
+            <button
+              disabled={busy}
+              onClick={() => {
+                setResetText("");
+                setResetNotice("");
+                setConfirmReset(true);
+              }}
+            >
+              Reset all progress
+            </button>
+          ) : (
+            <form
+              className="restore-preview"
+              aria-label="Confirm progress reset"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (busy || resetText !== "RESET") return;
+                if (await reset()) {
+                  setConfirmReset(false);
+                  setResetText("");
+                  setPending(null);
+                  setBackupFile(null);
+                  setError("");
+                  setNotice("");
+                  setResetNotice(
+                    "Progress reset. Your workout setup and preferences were kept. The next workout is A.",
+                  );
+                }
+              }}
+            >
+              <h3>Confirm progress reset</h3>
+              <p>
+                This deletes workout history and its charts/records, the
+                unfinished workout, rest timer, progression counters and
+                suggestions, and the local recovery snapshot. The next workout
+                returns to A. Download a JSON backup first if you want to
+                restore your progress later.
+              </p>
+              <button type="button" disabled={busy} onClick={exportBackup}>
+                Download backup before reset
+              </button>
+              <label>
+                Type RESET to confirm
+                <input
+                  value={resetText}
+                  onChange={(e) => setResetText(e.target.value)}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  disabled={busy}
+                  required
+                />
+              </label>
+              <div className="row">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setConfirmReset(false);
+                    setResetText("");
+                  }}
+                >
+                  Cancel reset
+                </button>
+                <button
+                  type="submit"
+                  className="primary"
+                  disabled={busy || resetText !== "RESET"}
+                >
+                  Delete progress permanently
+                </button>
+              </div>
+            </form>
+          )}
         </article>
       </div>
     </>
