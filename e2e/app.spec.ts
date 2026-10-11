@@ -82,14 +82,12 @@ test("set-box taps reduce reps to zero, keep rest unchanged and retain the edit 
   for (let i = 0; i < 5; i++) await set.click();
   await expect(set.locator("strong")).toHaveText("0");
   expect(await savedTimer(page)).toBe(timer);
-  const lift = page
-    .locator("article")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Barbell Back Squat",
-        exact: true,
-      }),
-    });
+  const lift = page.locator("article").filter({
+    has: page.getByRole("heading", {
+      name: "Barbell Back Squat",
+      exact: true,
+    }),
+  });
   await lift.getByText("Edit reps / load per set", { exact: true }).click();
   const form = lift.locator("form").first();
   await form.locator("input[name=reps]").fill("3");
@@ -148,6 +146,14 @@ test("offline reload, logging and history work after service worker caching", as
   await page.getByRole("button", { name: "Progress", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Workout A", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("tab", { name: "Help", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Set up your program and working weights",
+      exact: true,
+    }),
   ).toBeVisible();
   await context.setOffline(false);
 });
@@ -209,6 +215,39 @@ test("responsive screens have no horizontal overflow and installable manifest as
   ).toHaveAttribute("content", "5x5 gromritt");
   for (const icon of manifest.icons)
     expect((await request.get(icon.src)).status()).toBe(200);
+  const bar = page.getByRole("spinbutton", {
+    name: "Bar weight (kg)",
+    exact: true,
+  });
+  await bar.fill("25");
+  const preferences = page.getByRole("tab", {
+    name: "Preferences",
+    exact: true,
+  });
+  await preferences.focus();
+  await preferences.press("ArrowRight");
+  const help = page.getByRole("tab", { name: "Help", exact: true });
+  await expect(help).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("heading", { name: "Getting started", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Stored locally on this device",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .locator(".data-information")
+    .screenshot({ path: "test-results/help-data-information.png" });
+  await help.press("ArrowLeft");
+  await expect(preferences).toHaveAttribute("aria-selected", "true");
+  await expect(bar).toHaveValue("25");
   await page.screenshot({
     path: "test-results/mobile-settings.png",
     fullPage: true,
