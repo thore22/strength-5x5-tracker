@@ -5,6 +5,7 @@ import type { Change } from "./Program";
 import { recoveryState } from "../storage";
 import Help from "./Help";
 import { defaultPrimary, defaultSecondary } from "../appearance";
+import { applyDefaultRest } from "../engine";
 export default function Settings({
   data,
   change,
@@ -129,11 +130,11 @@ export default function Settings({
                   ...s.settings,
                   barWeight: Number(f.get("bar")),
                   plateIncrement: Number(f.get("plate")),
-                  defaultRest: Number(f.get("rest")),
                   audio: f.get("audio") === "on",
                   vibration: f.get("vibration") === "on",
                   theme: f.get("theme") as "dark" | "system",
                 };
+                applyDefaultRest(s, Number(f.get("rest")));
               });
             }}
           >
@@ -182,9 +183,11 @@ export default function Settings({
               </label>
             </div>
             <p>
-              Existing exercises keep their individual rest settings in Program.
-              Barbell weights include the bar; dumbbell weights are per
-              dumbbell.
+              Saving preferences applies this rest time to every exercise in A
+              and B for future workouts. Customize individual rest times
+              afterward in Program. Active workouts and history keep their saved
+              settings. Barbell weights include the bar; dumbbell weights are
+              per dumbbell.
             </p>
             <label>
               <input

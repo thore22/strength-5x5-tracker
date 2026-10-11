@@ -20,7 +20,8 @@ export default function Workout({
   const [choice, setChoice] = useState<"A" | "B">(data.next),
     [now, setNow] = useState(Date.now()),
     [summary, setSummary] = useState(false),
-    [confirm, setConfirm] = useState<"finish" | "discard" | null>(null);
+    [confirm, setConfirm] = useState<"finish" | "discard" | null>(null),
+    [openWarmups, setOpenWarmups] = useState<string[]>([]);
   const notified = useRef<number | null>(null);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 500);
@@ -249,67 +250,102 @@ export default function Workout({
                 at {prior.prescribedWeight} {data.settings.units}
               </p>
             )}
-            {lift.warmups.length > 0 && (
-              <details>
-                <summary>Warm-up sets · separate from working sets</summary>
-                {lift.warmups.map((w, j) => (
-                  <div className="row" key={j}>
-                    <button
-                      disabled={busy || a.paused}
-                      aria-label={`Warm-up ${j + 1} ${lift.exercise.name}`}
-                      onClick={() =>
-                        change((s) => {
-                          s.active!.lifts[i].warmups[j].done = !w.done;
-                        })
-                      }
-                    >
-                      {w.done ? "✓" : "○"}
-                    </button>
-                    <input
-                      aria-label={`Warm-up ${j + 1} weight ${lift.exercise.name}`}
-                      type="number"
-                      min="0"
-                      step="any"
-                      defaultValue={w.weight}
-                      key={`w-${w.weight}`}
-                      onBlur={(e) => {
-                        if (e.target.validity.valid)
+            {(lift.warmups.length > 0 ||
+              (lift.prescription.core &&
+                lift.exercise.equipment === "barbell")) && (
+              <>
+                <button
+                  className="warmup-toggle"
+                  aria-label={`Warm-up sets for ${lift.exercise.name}`}
+                  aria-expanded={openWarmups.includes(lift.exercise.id)}
+                  aria-controls={`warmups-${lift.exercise.id}`}
+                  onClick={() =>
+                    setOpenWarmups((open) =>
+                      open.includes(lift.exercise.id)
+                        ? open.filter((id) => id !== lift.exercise.id)
+                        : [...open, lift.exercise.id],
+                    )
+                  }
+                >
+                  Warm-up sets{" "}
+                  <span aria-hidden="true">
+                    {openWarmups.includes(lift.exercise.id) ? "−" : "+"}
+                  </span>
+                </button>
+                <div
+                  id={`warmups-${lift.exercise.id}`}
+                  hidden={!openWarmups.includes(lift.exercise.id)}
+                >
+                  <p>
+                    Separate from working sets; warm-ups do not affect
+                    progression.
+                  </p>
+                  {lift.warmups.length === 0 && (
+                    <p>
+                      No lighter warm-up sets can be generated with this working
+                      weight, bar weight, and plate increment. You can still
+                      warm up before logging your working sets.
+                    </p>
+                  )}
+                  {lift.warmups.map((w, j) => (
+                    <div className="row" key={j}>
+                      <button
+                        disabled={busy || a.paused}
+                        aria-label={`Warm-up ${j + 1} ${lift.exercise.name}`}
+                        onClick={() =>
                           change((s) => {
-                            s.active!.lifts[i].warmups[j].weight = Number(
-                              e.target.value,
-                            );
-                          });
-                      }}
-                    />
-                    <span>×</span>
-                    <input
-                      aria-label={`Warm-up ${j + 1} reps ${lift.exercise.name}`}
-                      type="number"
-                      min="1"
-                      max="100"
-                      defaultValue={w.reps}
-                      onBlur={(e) => {
-                        if (e.target.validity.valid)
+                            s.active!.lifts[i].warmups[j].done = !w.done;
+                          })
+                        }
+                      >
+                        {w.done ? "✓" : "○"}
+                      </button>
+                      <input
+                        aria-label={`Warm-up ${j + 1} weight ${lift.exercise.name}`}
+                        type="number"
+                        min="0"
+                        step="any"
+                        defaultValue={w.weight}
+                        key={`w-${w.weight}`}
+                        onBlur={(e) => {
+                          if (e.target.validity.valid)
+                            change((s) => {
+                              s.active!.lifts[i].warmups[j].weight = Number(
+                                e.target.value,
+                              );
+                            });
+                        }}
+                      />
+                      <span>×</span>
+                      <input
+                        aria-label={`Warm-up ${j + 1} reps ${lift.exercise.name}`}
+                        type="number"
+                        min="1"
+                        max="100"
+                        defaultValue={w.reps}
+                        onBlur={(e) => {
+                          if (e.target.validity.valid)
+                            change((s) => {
+                              s.active!.lifts[i].warmups[j].reps = Number(
+                                e.target.value,
+                              );
+                            });
+                        }}
+                      />
+                      <button
+                        disabled={busy || a.paused}
+                        onClick={() =>
                           change((s) => {
-                            s.active!.lifts[i].warmups[j].reps = Number(
-                              e.target.value,
-                            );
-                          });
-                      }}
-                    />
-                    <button
-                      disabled={busy || a.paused}
-                      onClick={() =>
-                        change((s) => {
-                          s.active!.lifts[i].warmups[j].skipped = !w.skipped;
-                        })
-                      }
-                    >
-                      {w.skipped ? "Unskip" : "Skip"}
-                    </button>
-                  </div>
-                ))}
-              </details>
+                            s.active!.lifts[i].warmups[j].skipped = !w.skipped;
+                          })
+                        }
+                      >
+                        {w.skipped ? "Unskip" : "Skip"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
             <div className="sets">
               {lift.sets.map((set, j) => (
@@ -322,7 +358,7 @@ export default function Workout({
                         : "failed"
                   }
                   aria-label={`${lift.exercise.name} set ${j + 1}`}
-                  aria-description="First tap logs target reps and starts rest. Further taps reduce reps by one, down to zero, without restarting rest."
+                  aria-description="First tap logs target reps and starts rest. Further taps reduce reps by one; after zero, the next tap returns to target reps. Corrections do not restart rest."
                   disabled={busy || a.paused || lift.skipped}
                   key={j}
                   onClick={() => change((s) => tapWorkingSet(s, i, j))}
