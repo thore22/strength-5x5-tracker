@@ -260,6 +260,9 @@ input[type="color"] {
   .sets:not(:has(> button:nth-child(6))) strong {
     white-space: nowrap;
   }
+  .sets:not(:has(> button:nth-child(6))) small {
+    letter-spacing: 0.5px;
+  }
 }
 .previous {
   font-size: 12px;

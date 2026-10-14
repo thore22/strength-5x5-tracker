@@ -619,28 +619,40 @@ test("set buttons scale on narrow screens and wrap larger counts without scrolli
   const row = page.locator(".sets").first();
   for (const width of [320, 375, 390, 430, 768]) {
     await page.setViewportSize({ width, height: 812 });
-    const boxes = await row.locator("button").evaluateAll((buttons) =>
-      buttons.map((button) => {
-        const box = button.getBoundingClientRect();
-        return { y: Math.round(box.y), width: box.width, height: box.height };
-      }),
-    );
-    expect(new Set(boxes.map((box) => box.y)).size).toBe(1);
-    expect(boxes.every((box) => box.width >= 44 && box.height >= 70)).toBe(
-      true,
-    );
-    if (width >= 430) expect(boxes.every((box) => box.width === 60)).toBe(true);
-    expect(
-      await row.evaluate(
-        (element) => element.scrollWidth <= element.clientWidth,
-      ),
-    ).toBe(true);
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
+    for (const font of ["system-ui", "Arial", "monospace"]) {
+      await row.evaluate((element, family) => {
+        element.style.fontFamily = family;
+      }, font);
+      const boxes = await row.locator("button").evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const box = button.getBoundingClientRect();
+          return { y: Math.round(box.y), width: box.width, height: box.height };
+        }),
+      );
+      expect(
+        new Set(boxes.map((box) => box.y)).size,
+        `${width}px with ${font}`,
+      ).toBe(1);
+      expect(boxes.every((box) => box.width >= 44 && box.height >= 70)).toBe(
+        true,
+      );
+      if (width >= 430)
+        expect(boxes.every((box) => box.width === 60)).toBe(true);
+      expect(
+        await row.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      ).toBe(true);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
   }
+  await row.evaluate((element) => {
+    element.style.fontFamily = "";
+  });
   await page.setViewportSize({ width: 375, height: 812 });
   await row.screenshot({ path: "test-results/compact-set-row.png" });
   const set = row.getByRole("button", {
