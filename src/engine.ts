@@ -47,6 +47,39 @@ export function changeWorkingWeight(
   progression.weight = weight;
   const lift = s.active?.lifts.find((lift) => lift.exercise.id === exerciseId);
   if (lift) {
+    if (
+      lift.prescribedWeight !== weight &&
+      lift.prescription.core &&
+      lift.exercise.equipment === "barbell"
+    ) {
+      const previousSuggestions = warmups(lift.prescribedWeight, s.settings);
+      const matchesPreviousSuggestion = (set: SessionLift["warmups"][number]) =>
+        previousSuggestions.some(
+          (suggestion) =>
+            suggestion.weight === set.weight && suggestion.reps === set.reps,
+        );
+      const preserved = lift.warmups
+        .filter(
+          (set) =>
+            set.done ||
+            set.skipped ||
+            set.custom ||
+            !matchesPreviousSuggestion(set),
+        )
+        .map((set) =>
+          set.done || set.skipped || matchesPreviousSuggestion(set)
+            ? set
+            : { ...set, custom: true },
+        );
+      const suggestions = warmups(weight, s.settings)
+        .filter(
+          (set) => !preserved.some((saved) => saved.weight === set.weight),
+        )
+        .slice(0, Math.max(0, 20 - preserved.length));
+      lift.warmups = [...preserved, ...suggestions].sort(
+        (a, b) => a.weight - b.weight,
+      );
+    }
     lift.prescribedWeight = weight;
     for (const set of lift.sets) set.weight = weight;
   }

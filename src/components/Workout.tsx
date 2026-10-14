@@ -295,7 +295,7 @@ export default function Workout({
                     </p>
                   )}
                   {lift.warmups.map((w, j) => (
-                    <div className="row" key={j}>
+                    <div className="row" key={`${lift.prescribedWeight}-${j}`}>
                       <button
                         disabled={busy || a.paused}
                         aria-label={`Warm-up ${j + 1} ${lift.exercise.name}`}
@@ -315,11 +315,15 @@ export default function Workout({
                         defaultValue={w.weight}
                         key={`w-${w.weight}`}
                         onBlur={(e) => {
-                          if (e.target.validity.valid)
+                          if (
+                            e.target.validity.valid &&
+                            Number(e.target.value) !== w.weight
+                          )
                             change((s) => {
                               s.active!.lifts[i].warmups[j].weight = Number(
                                 e.target.value,
                               );
+                              s.active!.lifts[i].warmups[j].custom = true;
                             });
                         }}
                       />
@@ -331,11 +335,15 @@ export default function Workout({
                         max="100"
                         defaultValue={w.reps}
                         onBlur={(e) => {
-                          if (e.target.validity.valid)
+                          if (
+                            e.target.validity.valid &&
+                            Number(e.target.value) !== w.reps
+                          )
                             change((s) => {
                               s.active!.lifts[i].warmups[j].reps = Number(
                                 e.target.value,
                               );
+                              s.active!.lifts[i].warmups[j].custom = true;
                             });
                         }}
                       />

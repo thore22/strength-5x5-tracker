@@ -76,6 +76,7 @@ const lift = z
             weight: num.max(2000),
             done: z.boolean(),
             skipped: z.boolean(),
+            custom: z.boolean().optional(),
           })
           .strict(),
       )

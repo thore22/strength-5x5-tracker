@@ -77,7 +77,9 @@ export default function WorkingWeight({
           </label>
           <p>
             Applies to all working sets, including logged sets, and saves your
-            future working weight. Reps, warm-ups, and rest stay unchanged.
+            future working weight. Warm-up suggestions adjust too; completed,
+            skipped, or manually edited warm-ups are kept. Work-set reps and
+            rest stay unchanged.
           </p>
           {exercise.equipment === "barbell" && <p>Include the bar weight.</p>}
           {exercise.equipment === "dumbbell" && (
