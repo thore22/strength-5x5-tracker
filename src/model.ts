@@ -44,6 +44,7 @@ export interface Warmup {
   weight: number;
   done: boolean;
   skipped: boolean;
+  custom?: boolean;
 }
 export interface SessionLift {
   exercise: Exercise;

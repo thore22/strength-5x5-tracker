@@ -246,6 +246,22 @@ test("tapping the working weight edits every work set before and during a workou
   expect(await savedTimer(page)).toBe(timer);
   await page.reload();
   await expect(weightButton).toContainText("75");
+  await page
+    .getByRole("button", {
+      name: "Warm-up sets for Barbell Back Squat",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#warmups-squat .row")).toHaveCount(4);
+  expect(
+    await page
+      .locator("#warmups-squat input[type=number]")
+      .evaluateAll((inputs) =>
+        inputs
+          .filter((_, i) => i % 2 === 0)
+          .map((input) => Number((input as HTMLInputElement).value)),
+      ),
+  ).toEqual([20, 30, 45, 60]);
   await expect(
     page
       .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
@@ -513,6 +529,83 @@ test("warm-up button expands generated sets and preserves their edits without lo
     .screenshot({ path: "test-results/warm-up-controls.png" });
   await toggle.click();
   await expect(panel).toBeHidden();
+});
+
+test("active weight changes refresh warm-ups and keep logged, skipped, and edited sets", async ({
+  page,
+}) => {
+  await start(page);
+  const toggle = page.getByRole("button", {
+    name: "Warm-up sets for Barbell Back Squat",
+    exact: true,
+  });
+  await toggle.click();
+  await expect(page.locator("#warmups-squat")).toContainText(
+    "No lighter warm-up sets",
+  );
+  const edit = async (weight: string) => {
+    await page
+      .getByRole("button", {
+        name: "Change working weight for Barbell Back Squat",
+        exact: true,
+      })
+      .click();
+    const form = page.getByRole("form", {
+      name: "Working weight for Barbell Back Squat",
+      exact: true,
+    });
+    await form.getByRole("spinbutton").fill(weight);
+    await form
+      .getByRole("button", { name: "Save weight", exact: true })
+      .click();
+    await expect(form).toBeHidden();
+  };
+  await edit("100");
+  const panel = page.locator("#warmups-squat");
+  await expect(panel.locator(".row")).toHaveCount(4);
+  await page
+    .getByRole("button", { name: "Warm-up 1 Barbell Back Squat", exact: true })
+    .click();
+  await panel.getByRole("button", { name: "Skip", exact: true }).nth(1).click();
+  const customWeight = page.getByRole("spinbutton", {
+    name: "Warm-up 3 weight Barbell Back Squat",
+    exact: true,
+  });
+  await customWeight.fill("55");
+  await customWeight.blur();
+  await expect(
+    page.getByRole("button", {
+      name: "Warm-up 1 Barbell Back Squat",
+      exact: true,
+    }),
+  ).toBeEnabled();
+  await edit("80");
+  await expect(panel.locator(".row")).toHaveCount(6);
+  expect(
+    await panel
+      .locator("input[type=number]")
+      .evaluateAll((inputs) =>
+        inputs
+          .filter((_, i) => i % 2 === 0)
+          .map((input) => Number((input as HTMLInputElement).value)),
+      ),
+  ).toEqual([20, 32.5, 40, 47.5, 55, 65]);
+  await expect(
+    panel.locator(".row").first().getByRole("button").first(),
+  ).toHaveText("✓");
+  await expect(
+    panel.getByRole("button", { name: "Unskip", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await toggle.click();
+  await expect(panel.locator(".row")).toHaveCount(6);
+  await expect(
+    panel.locator(".row").first().getByRole("button").first(),
+  ).toHaveText("✓");
+  await expect(
+    panel.getByRole("button", { name: "Unskip", exact: true }),
+  ).toBeVisible();
+  expect(await savedTimer(page)).toBeNull();
 });
 
 test("timer stays below simulated iPhone safe area when scrolling and adjusts by 15 seconds", async ({
