@@ -617,6 +617,7 @@ test("set buttons scale on narrow screens and wrap larger counts without scrolli
 }) => {
   await start(page);
   const row = page.locator(".sets").first();
+  await expect(row.locator("button")).toHaveCount(5);
   for (const width of [320, 375, 390, 430, 768]) {
     await page.setViewportSize({ width, height: 812 });
     for (const font of ["system-ui", "Arial", "monospace"]) {
@@ -700,6 +701,7 @@ test("set buttons scale on narrow screens and wrap larger counts without scrolli
       .getByRole("button", { name: "Start Workout A →", exact: true })
       .click();
     await page.setViewportSize({ width: 320, height: 812 });
+    await expect(row.locator("button")).toHaveCount(count);
     const positions = await row
       .locator("button")
       .evaluateAll((buttons) =>
