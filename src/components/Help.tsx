@@ -71,7 +71,11 @@ export default function Help() {
           <li>
             Tap <strong>Warm-up sets</strong> on core barbell exercises to view
             warm-ups. When no lighter sets can be generated, the panel explains
-            why. Warm-ups are separate and do not affect progression.
+            why. Each box shows the weight and target reps; tap to complete or
+            undo completion. Expand{" "}
+            <strong>Edit reps / load per warm-up set</strong>
+            to change its prescription or skip it. Warm-up taps do not reduce
+            reps or affect progression.
           </li>
           <li>
             Logging a set starts rest. Use <strong>+15s</strong>,{" "}

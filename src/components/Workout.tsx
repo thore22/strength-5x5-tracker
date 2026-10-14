@@ -9,6 +9,7 @@ import {
 import type { State } from "../model";
 import type { Change } from "./Program";
 import WorkingWeight from "./WorkingWeight";
+import WarmupSets from "./WarmupSets";
 export default function Workout({
   data,
   change,
@@ -294,71 +295,14 @@ export default function Workout({
                       warm up before logging your working sets.
                     </p>
                   )}
-                  {lift.warmups.map((w, j) => (
-                    <div className="row" key={`${lift.prescribedWeight}-${j}`}>
-                      <button
-                        disabled={busy || a.paused}
-                        aria-label={`Warm-up ${j + 1} ${lift.exercise.name}`}
-                        onClick={() =>
-                          change((s) => {
-                            s.active!.lifts[i].warmups[j].done = !w.done;
-                          })
-                        }
-                      >
-                        {w.done ? "✓" : "○"}
-                      </button>
-                      <input
-                        aria-label={`Warm-up ${j + 1} weight ${lift.exercise.name}`}
-                        type="number"
-                        min="0"
-                        step="any"
-                        defaultValue={w.weight}
-                        key={`w-${w.weight}`}
-                        onBlur={(e) => {
-                          if (
-                            e.target.validity.valid &&
-                            Number(e.target.value) !== w.weight
-                          )
-                            change((s) => {
-                              s.active!.lifts[i].warmups[j].weight = Number(
-                                e.target.value,
-                              );
-                              s.active!.lifts[i].warmups[j].custom = true;
-                            });
-                        }}
-                      />
-                      <span>×</span>
-                      <input
-                        aria-label={`Warm-up ${j + 1} reps ${lift.exercise.name}`}
-                        type="number"
-                        min="1"
-                        max="100"
-                        defaultValue={w.reps}
-                        onBlur={(e) => {
-                          if (
-                            e.target.validity.valid &&
-                            Number(e.target.value) !== w.reps
-                          )
-                            change((s) => {
-                              s.active!.lifts[i].warmups[j].reps = Number(
-                                e.target.value,
-                              );
-                              s.active!.lifts[i].warmups[j].custom = true;
-                            });
-                        }}
-                      />
-                      <button
-                        disabled={busy || a.paused}
-                        onClick={() =>
-                          change((s) => {
-                            s.active!.lifts[i].warmups[j].skipped = !w.skipped;
-                          })
-                        }
-                      >
-                        {w.skipped ? "Unskip" : "Skip"}
-                      </button>
-                    </div>
-                  ))}
+                  <WarmupSets
+                    lift={lift}
+                    index={i}
+                    units={data.settings.units}
+                    paused={a.paused}
+                    busy={busy}
+                    change={change}
+                  />
                 </div>
               </>
             )}

@@ -202,6 +202,57 @@ input[type="color"] {
   margin-top: 16px;
   color: var(--accent, #c7ed84);
 }
+.warmup-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 20px 0;
+}
+.warmup-sets button {
+  width: 64px;
+  min-width: max-content;
+  min-height: 100px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+.warmup-sets small {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+.warmup-sets strong {
+  font-size: 20px;
+}
+.warmup-unit {
+  font-size: 10px;
+}
+.warmup-sets .done {
+  background: var(--primary, #c7ed84);
+  color: var(--on-primary, #17220d);
+  border-color: var(--primary, #c7ed84);
+}
+.shell[data-theme] .warmup-sets .done small {
+  color: inherit;
+}
+.warmup-sets .skipped {
+  opacity: 0.6;
+}
+@media (max-width: 415px) {
+  .warmup-sets:not(:has(> button:nth-child(6))) {
+    gap: 4px;
+  }
+  .warmup-sets:not(:has(> button:nth-child(6))) button {
+    width: clamp(
+      44px,
+      calc((100% - (var(--warmup-count) - 1) * 4px) / var(--warmup-count)),
+      64px
+    );
+    flex-shrink: 0;
+  }
+}
 .sets button {
   width: 60px;
   min-height: 70px;
