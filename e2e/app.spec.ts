@@ -274,7 +274,11 @@ test("tapping the working weight edits every work set before and during a workou
     }),
   });
   await lift.getByText("Edit reps / load per set", { exact: true }).click();
-  for (const input of await lift.locator("input[name=weight]").all())
+  for (const input of await lift
+    .getByText("Edit reps / load per set", { exact: true })
+    .locator("..")
+    .locator("input[name=weight]")
+    .all())
     await expect(input).toHaveValue("75");
   await page
     .getByRole("button", { name: "Finish workout", exact: true })
@@ -464,8 +468,62 @@ test("warm-up button expands generated sets and preserves their edits without lo
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   const panel = page.locator("#warmups-squat");
   await expect(panel.locator(".row")).toHaveCount(4);
+  await expect(panel.getByRole("spinbutton").first()).toBeHidden();
+  await expect(panel.locator(".warmup-sets button")).toHaveCount(4);
+  for (const width of [320, 375, 390, 430]) {
+    await page.setViewportSize({ width, height: 812 });
+    expect(
+      await panel
+        .locator(".warmup-sets")
+        .evaluate((row) => row.scrollWidth <= row.clientWidth),
+    ).toBe(true);
+    const boxes = await panel
+      .locator(".warmup-sets button")
+      .evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const box = button.getBoundingClientRect();
+          return { width: box.width, height: box.height, y: box.y };
+        }),
+      );
+    expect(boxes.every((box) => box.width >= 44 && box.height >= 100)).toBe(
+      true,
+    );
+    expect(new Set(boxes.map((box) => Math.round(box.y))).size).toBe(1);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
   await page
     .getByRole("button", { name: "Warm-up 1 Barbell Back Squat", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Warm-up 1 Barbell Back Squat",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(panel.locator(".warmup-sets button").first()).toContainText(
+    "20",
+  );
+  await expect(panel.locator(".warmup-sets button").first()).toContainText(
+    "× 5 reps",
+  );
+  await panel.locator(".warmup-sets button").first().click();
+  await expect(panel.locator(".warmup-sets button").first()).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(panel.locator(".warmup-sets button").first()).toContainText(
+    "× 5 reps",
+  );
+  await panel.locator(".warmup-sets button").first().click();
+  await expect(panel.locator(".warmup-sets button").first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await panel
+    .locator(".warmup-sets")
+    .screenshot({ path: "test-results/warmup-set-boxes.png" });
+  await panel
+    .getByText("Edit reps / load per warm-up set", { exact: true })
     .click();
   await page
     .getByRole("spinbutton", {
@@ -485,6 +543,13 @@ test("warm-up button expands generated sets and preserves their edits without lo
       exact: true,
     })
     .blur();
+  await panel
+    .getByRole("form", {
+      name: "Edit warm-up 1 Barbell Back Squat",
+      exact: true,
+    })
+    .getByRole("button", { name: "Save warm-up", exact: true })
+    .click();
   await expect(
     page.getByRole("button", {
       name: "Warm-up 1 Barbell Back Squat",
@@ -502,7 +567,10 @@ test("warm-up button expands generated sets and preserves their edits without lo
       name: "Warm-up 1 Barbell Back Squat",
       exact: true,
     }),
-  ).toHaveText("✓");
+  ).toHaveAttribute("aria-pressed", "true");
+  await panel
+    .getByText("Edit reps / load per warm-up set", { exact: true })
+    .click();
   await expect(
     page.getByRole("spinbutton", {
       name: "Warm-up 1 weight Barbell Back Squat",
@@ -566,6 +634,9 @@ test("active weight changes refresh warm-ups and keep logged, skipped, and edite
   await page
     .getByRole("button", { name: "Warm-up 1 Barbell Back Squat", exact: true })
     .click();
+  await panel
+    .getByText("Edit reps / load per warm-up set", { exact: true })
+    .click();
   await panel.getByRole("button", { name: "Skip", exact: true }).nth(1).click();
   const customWeight = page.getByRole("spinbutton", {
     name: "Warm-up 3 weight Barbell Back Squat",
@@ -573,6 +644,13 @@ test("active weight changes refresh warm-ups and keep logged, skipped, and edite
   });
   await customWeight.fill("55");
   await customWeight.blur();
+  await panel
+    .getByRole("form", {
+      name: "Edit warm-up 3 Barbell Back Squat",
+      exact: true,
+    })
+    .getByRole("button", { name: "Save warm-up", exact: true })
+    .click();
   await expect(
     page.getByRole("button", {
       name: "Warm-up 1 Barbell Back Squat",
@@ -590,18 +668,23 @@ test("active weight changes refresh warm-ups and keep logged, skipped, and edite
           .map((input) => Number((input as HTMLInputElement).value)),
       ),
   ).toEqual([20, 32.5, 40, 47.5, 55, 65]);
-  await expect(
-    panel.locator(".row").first().getByRole("button").first(),
-  ).toHaveText("✓");
+  await expect(panel.locator(".warmup-sets button").first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await expect(
     panel.getByRole("button", { name: "Unskip", exact: true }),
   ).toBeVisible();
   await page.reload();
   await toggle.click();
+  await panel
+    .getByText("Edit reps / load per warm-up set", { exact: true })
+    .click();
   await expect(panel.locator(".row")).toHaveCount(6);
-  await expect(
-    panel.locator(".row").first().getByRole("button").first(),
-  ).toHaveText("✓");
+  await expect(panel.locator(".warmup-sets button").first()).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await expect(
     panel.getByRole("button", { name: "Unskip", exact: true }),
   ).toBeVisible();
