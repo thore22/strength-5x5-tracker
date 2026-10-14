@@ -46,7 +46,7 @@ export default function WarmupSets({
             </small>
             <strong>{set.weight}</strong>
             <span className="warmup-unit">{units}</span>
-            <span>× {set.reps} reps</span>
+            <span>× {set.reps}</span>
             {set.skipped && <span>Skipped</span>}
           </button>
         ))}

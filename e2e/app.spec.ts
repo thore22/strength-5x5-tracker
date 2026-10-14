@@ -472,24 +472,35 @@ test("warm-up button expands generated sets and preserves their edits without lo
   await expect(panel.locator(".warmup-sets button")).toHaveCount(4);
   for (const width of [320, 375, 390, 430]) {
     await page.setViewportSize({ width, height: 812 });
-    expect(
-      await panel
-        .locator(".warmup-sets")
-        .evaluate((row) => row.scrollWidth <= row.clientWidth),
-    ).toBe(true);
-    const boxes = await panel
-      .locator(".warmup-sets button")
-      .evaluateAll((buttons) =>
-        buttons.map((button) => {
-          const box = button.getBoundingClientRect();
-          return { width: box.width, height: box.height, y: box.y };
-        }),
+    for (const font of ["system-ui", "Arial", "monospace"]) {
+      await panel.locator(".warmup-sets").evaluate((element, family) => {
+        element.style.fontFamily = family;
+      }, font);
+      expect(
+        await panel
+          .locator(".warmup-sets")
+          .evaluate((row) => row.scrollWidth <= row.clientWidth),
+      ).toBe(true);
+      const boxes = await panel
+        .locator(".warmup-sets button")
+        .evaluateAll((buttons) =>
+          buttons.map((button) => {
+            const box = button.getBoundingClientRect();
+            return { width: box.width, height: box.height, y: box.y };
+          }),
+        );
+      expect(boxes.every((box) => box.width >= 44 && box.height >= 100)).toBe(
+        true,
       );
-    expect(boxes.every((box) => box.width >= 44 && box.height >= 100)).toBe(
-      true,
-    );
-    expect(new Set(boxes.map((box) => Math.round(box.y))).size).toBe(1);
+      expect(
+        new Set(boxes.map((box) => Math.round(box.y))).size,
+        `${width}px with ${font}`,
+      ).toBe(1);
+    }
   }
+  await panel.locator(".warmup-sets").evaluate((element) => {
+    element.style.fontFamily = "";
+  });
   await page.setViewportSize({ width: 375, height: 812 });
   await page
     .getByRole("button", { name: "Warm-up 1 Barbell Back Squat", exact: true })
@@ -504,7 +515,7 @@ test("warm-up button expands generated sets and preserves their edits without lo
     "20",
   );
   await expect(panel.locator(".warmup-sets button").first()).toContainText(
-    "× 5 reps",
+    "× 5",
   );
   await panel.locator(".warmup-sets button").first().click();
   await expect(panel.locator(".warmup-sets button").first()).toHaveAttribute(
@@ -512,7 +523,7 @@ test("warm-up button expands generated sets and preserves their edits without lo
     "false",
   );
   await expect(panel.locator(".warmup-sets button").first()).toContainText(
-    "× 5 reps",
+    "× 5",
   );
   await panel.locator(".warmup-sets button").first().click();
   await expect(panel.locator(".warmup-sets button").first()).toHaveAttribute(
