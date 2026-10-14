@@ -251,14 +251,12 @@ test("tapping the working weight edits every work set before and during a workou
       .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
       .locator("strong"),
   ).toHaveText("5");
-  const lift = page
-    .locator("article")
-    .filter({
-      has: page.getByRole("heading", {
-        name: "Barbell Back Squat",
-        exact: true,
-      }),
-    });
+  const lift = page.locator("article").filter({
+    has: page.getByRole("heading", {
+      name: "Barbell Back Squat",
+      exact: true,
+    }),
+  });
   await lift.getByText("Edit reps / load per set", { exact: true }).click();
   for (const input of await lift.locator("input[name=weight]").all())
     await expect(input).toHaveValue("75");
@@ -614,6 +612,120 @@ test("JSON export/import and invalid backup leave existing data intact", async (
     page.getByRole("button", { name: "Barbell Back Squat set 1", exact: true }),
   ).toHaveClass("done");
 });
+test("set buttons scale on narrow screens and wrap larger counts without scrolling", async ({
+  page,
+}) => {
+  await start(page);
+  const row = page.locator(".sets").first();
+  for (const width of [320, 375, 390, 430, 768]) {
+    await page.setViewportSize({ width, height: 812 });
+    const boxes = await row.locator("button").evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const box = button.getBoundingClientRect();
+        return { y: Math.round(box.y), width: box.width, height: box.height };
+      }),
+    );
+    expect(new Set(boxes.map((box) => box.y)).size).toBe(1);
+    expect(boxes.every((box) => box.width >= 44 && box.height >= 70)).toBe(
+      true,
+    );
+    if (width >= 430) expect(boxes.every((box) => box.width === 60)).toBe(true);
+    expect(
+      await row.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  await row.screenshot({ path: "test-results/compact-set-row.png" });
+  const set = row.getByRole("button", {
+    name: "Barbell Back Squat set 1",
+    exact: true,
+  });
+  await set.click();
+  await expect(set.locator("strong")).toHaveText("5");
+  const timer = await savedTimer(page);
+  await set.click();
+  await expect(set.locator("strong")).toHaveText("4");
+  expect(await savedTimer(page)).toBe(timer);
+  await page.getByRole("button", { name: "Discard", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Discard session", exact: true })
+    .click();
+  for (const count of [4, 6, 20, 5]) {
+    await page.getByRole("button", { name: "Program", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Edit", exact: true })
+      .first()
+      .click();
+    await page
+      .getByRole("spinbutton", { name: "Target sets", exact: true })
+      .fill(String(count));
+    if (count === 5) {
+      await page
+        .getByRole("spinbutton", {
+          name: "Minimum reps / seconds",
+          exact: true,
+        })
+        .fill("3600");
+      await page
+        .getByRole("spinbutton", {
+          name: "Maximum reps / seconds",
+          exact: true,
+        })
+        .fill("3600");
+    }
+    await page
+      .getByRole("button", { name: "Save prescription", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Workout", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Start Workout A →", exact: true })
+      .click();
+    await page.setViewportSize({ width: 320, height: 812 });
+    const positions = await row
+      .locator("button")
+      .evaluateAll((buttons) =>
+        buttons.map((button) => Math.round(button.getBoundingClientRect().y)),
+      );
+    expect(new Set(positions).size).toBe(count <= 5 ? 1 : Math.ceil(count / 3));
+    expect(
+      await row.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (count === 5) {
+      for (const button of await row.locator("button").all())
+        await button.click();
+      const widePositions = await row
+        .locator("button")
+        .evaluateAll((buttons) =>
+          buttons.map((button) => Math.round(button.getBoundingClientRect().y)),
+        );
+      expect(new Set(widePositions).size).toBeGreaterThan(1);
+      expect(
+        await row.evaluate(
+          (element) => element.scrollWidth <= element.clientWidth,
+        ),
+      ).toBe(true);
+    }
+    await page.getByRole("button", { name: "Discard", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Discard session", exact: true })
+      .click();
+  }
+});
+
 test("responsive screens have no horizontal overflow and installable manifest assets", async ({
   page,
   request,

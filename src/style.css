@@ -229,6 +229,38 @@ input[type="color"] {
 .sets .failed small {
   color: #ffffff;
 }
+@media (max-width: 415px) {
+  .sets:not(:has(> button:nth-child(6))) {
+    --set-count: 1;
+    gap: 4px;
+  }
+  .sets:has(> button:nth-child(2)) {
+    --set-count: 2;
+  }
+  .sets:has(> button:nth-child(3)) {
+    --set-count: 3;
+  }
+  .sets:has(> button:nth-child(4)) {
+    --set-count: 4;
+  }
+  .sets:has(> button:nth-child(5)) {
+    --set-count: 5;
+  }
+  .sets:not(:has(> button:nth-child(6))) button {
+    width: clamp(
+      44px,
+      calc((100% - (var(--set-count) - 1) * 4px) / var(--set-count)),
+      60px
+    );
+    min-width: max-content;
+    flex-shrink: 0;
+    padding-inline: 4px;
+  }
+  .sets:not(:has(> button:nth-child(6))) small,
+  .sets:not(:has(> button:nth-child(6))) strong {
+    white-space: nowrap;
+  }
+}
 .previous {
   font-size: 12px;
 }
