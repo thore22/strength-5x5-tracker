@@ -30,6 +30,27 @@ export function applyDefaultRest(s: State, seconds: number): void {
   for (const prescription of Object.values(s.templates).flat())
     prescription.rest = seconds;
 }
+export function changeWorkingWeight(
+  s: State,
+  exerciseId: string,
+  weight: number,
+): void {
+  if (!Number.isFinite(weight) || weight < 0 || weight > 2000)
+    throw new Error("Working weight must be between 0 and 2000.");
+  const progression = s.progression[exerciseId];
+  if (
+    !progression ||
+    !s.exercises.some((exercise) => exercise.id === exerciseId)
+  )
+    throw new Error("Unknown exercise.");
+  if (progression.weight !== weight) progression.suggestion = null;
+  progression.weight = weight;
+  const lift = s.active?.lifts.find((lift) => lift.exercise.id === exerciseId);
+  if (lift) {
+    lift.prescribedWeight = weight;
+    for (const set of lift.sets) set.weight = weight;
+  }
+}
 export function warmups(
   weight: number,
   settings: Settings,
