@@ -162,10 +162,28 @@ input[type="color"] {
   justify-content: space-between;
   align-items: start;
   gap: 14px;
+  flex-wrap: wrap;
 }
-.lift-title > b {
+.working-weight {
+  background: transparent;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  border-color: var(--border, #353d32);
+}
+.working-weight strong {
   font-size: 28px;
   white-space: nowrap;
+}
+.working-weight > span {
+  font-size: 10px;
+  color: var(--accent, #c7ed84);
+}
+.weight-editor {
+  flex-basis: 100%;
+  width: 100%;
+  border-top: 1px solid var(--border, #30392a);
 }
 .core {
   border-left: 3px solid var(--primary, #c7ed84);

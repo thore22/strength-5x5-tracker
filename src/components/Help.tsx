@@ -53,6 +53,12 @@ export default function Help() {
         </p>
         <ul>
           <li>
+            Tap the displayed working weight before or during a workout, enter a
+            new load, and select <strong>Save weight</strong>. It updates all
+            work sets, including logged sets, and the future target. Completed
+            workout history is unchanged.
+          </li>
+          <li>
             Tap a working-set box to log the target reps. Further taps reduce
             the count by one, down to zero. Tap again after zero to return to
             the target reps without restarting rest.

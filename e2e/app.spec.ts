@@ -204,6 +204,106 @@ test("progress reset requires confirmation, persists, and remains restorable fro
   ).toHaveClass("done");
 });
 
+test("tapping the working weight edits every work set before and during a workout and survives backup restore", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  const weightButton = page.getByRole("button", {
+    name: "Change working weight for Barbell Back Squat",
+    exact: true,
+  });
+  await weightButton.click();
+  const form = page.getByRole("form", {
+    name: "Working weight for Barbell Back Squat",
+    exact: true,
+  });
+  await form.getByRole("spinbutton").fill("55");
+  await form
+    .getByRole("button", { name: "Cancel weight change", exact: true })
+    .click();
+  await expect(weightButton).toContainText("20");
+  await weightButton.click();
+  await form.getByRole("spinbutton").fill("-1");
+  await form.getByRole("button", { name: "Save weight", exact: true }).click();
+  await expect(form).toBeVisible();
+  await form.getByRole("spinbutton").fill("55");
+  await form.getByRole("button", { name: "Save weight", exact: true }).click();
+  await expect(weightButton).toContainText("55");
+  await page.reload();
+  await expect(weightButton).toContainText("55");
+  await page
+    .getByRole("button", { name: "Start Workout A →", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+    .click();
+  const timer = await savedTimer(page);
+  await weightButton.click();
+  await form.getByRole("spinbutton").fill("75");
+  await form.screenshot({ path: "test-results/working-weight-editor.png" });
+  await form.getByRole("button", { name: "Save weight", exact: true }).click();
+  await expect(weightButton).toContainText("75");
+  expect(await savedTimer(page)).toBe(timer);
+  await page.reload();
+  await expect(weightButton).toContainText("75");
+  await expect(
+    page
+      .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
+      .locator("strong"),
+  ).toHaveText("5");
+  const lift = page
+    .locator("article")
+    .filter({
+      has: page.getByRole("heading", {
+        name: "Barbell Back Squat",
+        exact: true,
+      }),
+    });
+  await lift.getByText("Edit reps / load per set", { exact: true }).click();
+  for (const input of await lift.locator("input[name=weight]").all())
+    await expect(input).toHaveValue("75");
+  await page
+    .getByRole("button", { name: "Finish workout", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Complete & save", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Start Workout B →", exact: true })
+    .click();
+  await weightButton.click();
+  await form.getByRole("spinbutton").fill("100");
+  await form.getByRole("button", { name: "Save weight", exact: true }).click();
+  await expect(weightButton).toContainText("100");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  const downloadPromise = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Generate JSON backup", exact: true })
+    .click();
+  const filePath = testInfo.outputPath("working-weight-backup.json");
+  await (await downloadPromise).saveAs(filePath);
+  const data = JSON.parse(await readFile(filePath, "utf8")).data;
+  expect(data.history[0].lifts[0].prescribedWeight).toBe(75);
+  expect(
+    data.active.lifts[0].sets.every(
+      (set: { weight: number }) => set.weight === 100,
+    ),
+  ).toBe(true);
+  expect(data.progression.squat.weight).toBe(100);
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await weightButton.click();
+  await form.getByRole("spinbutton").fill("110");
+  await form.getByRole("button", { name: "Save weight", exact: true }).click();
+  await expect(weightButton).toContainText("110");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.locator("input[type=file]").setInputFiles(filePath);
+  await page
+    .getByRole("button", { name: "Replace with this backup", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await expect(weightButton).toContainText("100");
+});
+
 test("logging survives refresh and template changes preserve history", async ({
   page,
 }) => {

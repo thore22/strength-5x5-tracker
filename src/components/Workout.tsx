@@ -8,6 +8,7 @@ import {
 } from "../engine";
 import type { State } from "../model";
 import type { Change } from "./Program";
+import WorkingWeight from "./WorkingWeight";
 export default function Workout({
   data,
   change,
@@ -137,10 +138,13 @@ export default function Workout({
               </small>
               <div className="lift-title">
                 <h2>{ex.name}</h2>
-                <b>
-                  {data.progression[ex.id].weight}
-                  <small> {data.settings.units}</small>
-                </b>
+                <WorkingWeight
+                  exercise={ex}
+                  weight={data.progression[ex.id].weight}
+                  units={data.settings.units}
+                  change={change}
+                  busy={busy}
+                />
               </div>
               <p>
                 {p.sets} × {p.minReps}
@@ -234,10 +238,13 @@ export default function Workout({
             <small>{lift.prescription.core ? "CORE LIFT" : "ACCESSORY"}</small>
             <div className="lift-title">
               <h2>{lift.exercise.name}</h2>
-              <b>
-                {lift.prescribedWeight}
-                <small> {data.settings.units}</small>
-              </b>
+              <WorkingWeight
+                exercise={lift.exercise}
+                weight={lift.prescribedWeight}
+                units={data.settings.units}
+                change={change}
+                busy={busy}
+              />
             </div>
             <p>
               {lift.prescription.sets} × {lift.prescription.minReps}–
