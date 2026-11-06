@@ -450,6 +450,7 @@ button:disabled {
 input,
 select,
 textarea {
+  font-size: max(16px, 1rem);
   min-height: 48px;
   border: 1px solid var(--border, #41493c);
   border-radius: 10px;

@@ -10,6 +10,7 @@ import { backupDue } from "./backup";
 import { activateUpdate, updateAvailable } from "./pwa";
 import { appearanceVariables } from "./appearance";
 import { resetProgress } from "./reset";
+import { usePageScroll } from "./scroll";
 export default function App() {
   const [data, setData] = useState<State | null>(null),
     [page, setPage] = useState("Workout"),
@@ -20,6 +21,7 @@ export default function App() {
     [updateReady, setUpdateReady] = useState(updateAvailable);
   const current = useRef<{ state: State; revision: number } | null>(null),
     queue = useRef<Promise<void>>(Promise.resolve());
+  usePageScroll(!!data, page, data?.active?.id);
   useEffect(() => {
     const variables = appearanceVariables(data?.settings ?? {});
     for (const [key, value] of Object.entries(variables))

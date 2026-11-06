@@ -20,7 +20,7 @@ export default function WorkingWeight({
   const button = useRef<HTMLButtonElement>(null);
   const close = () => {
     setEditing(false);
-    button.current?.focus();
+    button.current?.focus({ preventScroll: true });
   };
   const label =
     exercise.equipment === "assisted bodyweight"
