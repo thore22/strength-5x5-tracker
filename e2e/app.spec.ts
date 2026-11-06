@@ -927,6 +927,123 @@ test("set buttons scale on narrow screens and wrap larger counts without scrolli
   }
 });
 
+test("startup and navigation reset scroll without moving it during logging or editing", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const original = window.scrollTo.bind(window);
+    (window as any).scrollRequests = 0;
+    window.scrollTo = ((...args: any[]) => {
+      (window as any).scrollRequests++;
+      return (original as any)(...args);
+    }) as typeof window.scrollTo;
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Start Workout A →", exact: true })
+    .waitFor();
+  expect(await page.evaluate(() => history.scrollRestoration)).toBe("manual");
+  await page
+    .getByRole("button", { name: "Start Workout A →", exact: true })
+    .click();
+  await expect(page.locator(".sets")).toHaveCount(5);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  const set = page.getByRole("button", {
+    name: "Hanging Leg Raise set 1",
+    exact: true,
+  });
+  await set.click();
+  await expect(set).toHaveClass("done");
+  const count = await page.evaluate(() => (window as any).scrollRequests);
+  await page.waitForTimeout(1100);
+  expect(await page.evaluate(() => (window as any).scrollRequests)).toBe(count);
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(400);
+  await page
+    .getByRole("button", {
+      name: "Change working weight for Hanging Leg Raise",
+      exact: true,
+    })
+    .click();
+  const form = page.getByRole("form", {
+    name: "Working weight for Hanging Leg Raise",
+    exact: true,
+  });
+  await form.getByRole("spinbutton").fill("5");
+  await form.getByRole("button", { name: "Save weight", exact: true }).click();
+  await expect(form).toBeHidden();
+  expect(await page.evaluate(() => (window as any).scrollRequests)).toBe(count);
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(400);
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await page.getByRole("button", { name: "Workout", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  await page.reload();
+  await expect(page.locator(".sets")).toHaveCount(5);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+  await expect(set).toHaveClass("done");
+  await page.evaluate(() => {
+    scrollTo(0, document.documentElement.scrollHeight);
+    window.dispatchEvent(
+      new PageTransitionEvent("pageshow", { persisted: false }),
+    );
+  });
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(400);
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new PageTransitionEvent("pageshow", { persisted: true }),
+    ),
+  );
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+});
+
+test("input text stays at least 16px without narrow-screen overflow", async ({
+  page,
+}) => {
+  const check = async () => {
+    for (const width of [320, 375, 390]) {
+      await page.setViewportSize({ width, height: 812 });
+      const fonts = await page
+        .locator("input,select,textarea")
+        .evaluateAll((fields) =>
+          fields
+            .filter((field) => field.getClientRects().length)
+            .map((field) => parseFloat(getComputedStyle(field).fontSize)),
+        );
+      expect(fonts.length).toBeGreaterThan(0);
+      expect(fonts.every((font) => font >= 16)).toBe(true);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+  };
+  await start(page);
+  await page
+    .getByRole("button", {
+      name: "Change working weight for Barbell Back Squat",
+      exact: true,
+    })
+    .click();
+  await check();
+  await page
+    .getByRole("button", { name: "Cancel weight change", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Program", exact: true }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).first().click();
+  await check();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await check();
+  await page.addStyleTag({ content: "html{font-size:20px}" });
+  expect(
+    await page
+      .getByRole("spinbutton", { name: "Bar weight (kg)", exact: true })
+      .evaluate((field) => parseFloat(getComputedStyle(field).fontSize)),
+  ).toBe(20);
+});
+
 test("responsive screens have no horizontal overflow and installable manifest assets", async ({
   page,
   request,
