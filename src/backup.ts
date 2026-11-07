@@ -2,7 +2,7 @@ import { migrateState } from "./validation";
 import type { State } from "./model";
 export interface Backup {
   format: "strength-tracker";
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   exportedAt: string;
   checksum?: string;
   data: unknown;
@@ -24,7 +24,7 @@ export async function makeBackup(
   return JSON.stringify(
     {
       format: "strength-tracker",
-      version: 2,
+      version: 3,
       exportedAt: now,
       checksum: await checksum(data),
       data,
@@ -47,12 +47,12 @@ export async function parseBackup(
   if (
     !b ||
     b.format !== "strength-tracker" ||
-    ![1, 2].includes(b.version) ||
+    ![1, 2, 3].includes(b.version) ||
     !Number.isFinite(Date.parse(b.exportedAt))
   )
     throw new Error("Unsupported or invalid Strength backup.");
   if (
-    b.version === 2 &&
+    b.version >= 2 &&
     (typeof b.checksum !== "string" || (await checksum(b.data)) !== b.checksum)
   )
     throw new Error(

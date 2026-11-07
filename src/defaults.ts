@@ -206,7 +206,7 @@ export function freshState(): State {
   ];
   B[2].rule.increment = 5;
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exercises: structuredClone(catalog),
     templates: { A, B },
     progression: Object.fromEntries(

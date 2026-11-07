@@ -1119,6 +1119,14 @@ test("a service worker deployment update preserves history and the active sessio
   await page
     .getByRole("button", { name: "Barbell Back Squat set 1", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Swap Hanging Leg Raise", exact: true })
+    .click();
+  await page.getByRole("dialog").getByRole("radio").check();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Use for this workout", exact: true })
+    .click();
   await writeFile(".qa-build-version", "release-two");
   await page.evaluate(async () => {
     const r = await navigator.serviceWorker.getRegistration();
@@ -1130,6 +1138,9 @@ test("a service worker deployment update preserves history and the active sessio
   await expect(
     page.getByRole("button", { name: "Barbell Back Squat set 1", exact: true }),
   ).toHaveClass("done");
+  await expect(
+    page.getByText("Replaces Hanging Leg Raise · Today only", { exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Finish workout", exact: true })
     .click();
@@ -1143,5 +1154,11 @@ test("a service worker deployment update preserves history and the active sessio
   await page.getByRole("button", { name: "Progress", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Workout A", exact: true }),
+  ).toBeVisible();
+  await page.getByText("View every set", { exact: true }).click();
+  await expect(
+    page.getByText("Replaces Hanging Leg Raise · This workout only", {
+      exact: true,
+    }),
   ).toBeVisible();
 });

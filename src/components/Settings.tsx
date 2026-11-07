@@ -449,7 +449,7 @@ export default function Settings({
                 setPending({
                   state,
                   exportedAt: state.lastBackup ?? state.createdAt,
-                  version: 2,
+                  version: 3,
                 });
               } catch (e) {
                 setError(String(e));

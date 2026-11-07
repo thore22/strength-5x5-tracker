@@ -56,6 +56,8 @@ const liftState = z
     suggestion: num.nullable(),
   })
   .strict();
+// Validate stored snapshot integrity independently of today's curated swap list:
+// future catalog-policy edits must never invalidate historical training data.
 const lift = z
   .object({
     exercise,
@@ -84,12 +86,27 @@ const lift = z
     skipped: z.boolean(),
     outcome: z.enum(["success", "failure", "skipped"]).optional(),
     deload: z.boolean().optional(),
+    replaced: z
+      .object({
+        exercise,
+        prescription,
+        prescribedWeight: num.max(2000),
+      })
+      .strict()
+      .refine(
+        (x) =>
+          !x.prescription.core && x.exercise.id === x.prescription.exerciseId,
+        "Invalid original accessory snapshot",
+      )
+      .optional(),
   })
   .strict()
   .refine(
     (x) =>
       x.exercise.id === x.prescription.exerciseId &&
-      x.sets.length === x.prescription.sets,
+      x.sets.length === x.prescription.sets &&
+      (!x.replaced ||
+        (!x.prescription.core && x.replaced.exercise.id !== x.exercise.id)),
     "Invalid session prescription",
   );
 const session = z
@@ -105,7 +122,7 @@ const session = z
   .strict();
 export const stateSchema = z
   .object({
-    schemaVersion: z.literal(2),
+    schemaVersion: z.literal(3),
     exercises: z.array(exercise).min(1).max(1000),
     templates: z
       .object({
@@ -168,7 +185,11 @@ export function validateState(input: unknown): State {
   for (const h of [...s.history, ...(s.active ? [s.active] : [])])
     if (
       !unique(h.lifts.map((l) => l.exercise.id)) ||
-      h.lifts.some((l) => !ids.includes(l.exercise.id))
+      h.lifts.some(
+        (l) =>
+          !ids.includes(l.exercise.id) ||
+          (l.replaced && !ids.includes(l.replaced.exercise.id)),
+      )
     )
       throw new Error("Workout has duplicate or unknown exercise references.");
   if (
@@ -184,14 +205,14 @@ export function migrateState(input: unknown): State {
   if (!input || typeof input !== "object")
     throw new Error("Missing training state.");
   const raw = input as Record<string, unknown>;
-  if (raw.schemaVersion === 1)
+  if (raw.schemaVersion === 1 || raw.schemaVersion === 2)
     return validateState({
       ...raw,
-      schemaVersion: 2,
+      schemaVersion: 3,
       timerEnd: raw.timerEnd ?? null,
       reminderDismissedAt: raw.reminderDismissedAt ?? null,
     });
-  if (raw.schemaVersion !== 2)
+  if (raw.schemaVersion !== 3)
     throw new Error(
       "Unsupported data version. Update the app before restoring this file.",
     );

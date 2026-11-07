@@ -21,6 +21,7 @@
 Use the classic alternating A/B structure, three sessions per week, with no mandatory calendar schedule.
 
 **Workout A**
+
 - Barbell Back Squat: 5×5
 - Barbell Bench Press: 5×5
 - Bent-Over Barbell Row: 5×5
@@ -29,6 +30,7 @@ Use the classic alternating A/B structure, three sessions per week, with no mand
 - Hanging Leg Raise: 3×8–15
 
 **Workout B**
+
 - Barbell Back Squat: 5×5
 - Standing Barbell Overhead Press: 5×5
 - Conventional Barbell Deadlift: 1×5
@@ -109,6 +111,18 @@ Workout A/B alternation advances after a completed workout, not an abandoned or 
 - On completion, show a summary and the next planned exercise targets.
 - Prevent duplicate session completion.
 
+### 7.1 In-workout accessory swaps
+
+- Each active accessory card has a **Swap** button opening an accessible bottom sheet.
+- Offer only curated, built-in alternatives matching the original accessory’s movement role; exclude exercises already in the active workout. Core lifts and unclassified custom exercises cannot be swapped.
+- Swap only before any working sets or warm-ups have been logged for that accessory, while the session is running. Never remove logged performance.
+- Choices are anchored to the original accessory snapshot from the started A/B workout, even if templates subsequently change. Preserve that original exercise/configuration/load snapshot when swapping; returning to the original restores its prescription.
+- Swaps affect this session only, never A/B templates. Show the original exercise in the active card and history.
+- Preview the replacement’s own sets/reps (seconds for timed exercises), equipment, previous performance, rest and progression. Use curated replacement defaults; preserve the slot’s rest period. Require explicit starting-load entry for a loaded alternative with no history. Never convert weights between exercises.
+- Save the replacement’s confirmed load as its own future target, as with normal working-weight edits. Only performed exercises affect progression; replaced exercises never receive a failure.
+- Preserve swaps through restart, app updates, atomic restore and complete JSON backups. Migrate stored schema v1/v2 to v3 without dropping data; continue accepting supported v1/v2 backups. Older app versions reject the new schema instead of silently discarding swap metadata.
+- Curated groups and research rationale are maintained in `ACCESSORY_SWAPS.md`.
+
 ## 8. History and progress
 
 - Chronological completed-workout history.
@@ -129,6 +143,7 @@ All training records, exercise definitions, configurations, progression counters
 Provide a dedicated **Backup & Restore** section:
 
 **Export**
+
 - Generate a complete, downloadable, human-readable JSON backup.
 - Use a versioned backup schema, export timestamp and descriptive filename, e.g. `strength-tracker-backup-2026-10-11.json`.
 - Include all required information for reconstructing the exact training state.
@@ -138,6 +153,7 @@ Provide a dedicated **Backup & Restore** section:
 - Show the time a backup was last generated. Do not falsely claim it was saved to iCloud without confirmation.
 
 **Import**
+
 - Choose a JSON backup using the native iOS file picker.
 - Validate file type, schema version, required fields and internal references.
 - Preview the backup timestamp, number of workouts and exercise data before restoring.
@@ -150,11 +166,13 @@ Provide a dedicated **Backup & Restore** section:
 - Do not silently merge, duplicate, delete or overwrite records.
 
 **Reminders**
+
 - Remind after three completed workouts or seven days since the last generated backup, whichever occurs first.
 - Allow dismissing the reminder, but keep backup status visible in Settings.
 - Reminders must work without a server or push notifications.
 
 **Storage protection**
+
 - Request persistent storage through browser APIs where supported.
 - Handle storage errors gracefully.
 - Do not erase IndexedDB during deployment updates, cache cleanups or service-worker upgrades.
@@ -178,6 +196,7 @@ Use bottom navigation on iPhone.
 Use a separate, testable progression calculation module with automated unit tests.
 
 Required tests:
+
 - Successful 5×5 increases the next weight correctly.
 - Missing repetitions keeps the same weight.
 - Three consecutive failures trigger the configured deload.
