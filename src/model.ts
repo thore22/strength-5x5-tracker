@@ -55,6 +55,11 @@ export interface SessionLift {
   skipped: boolean;
   outcome?: "success" | "failure" | "skipped";
   deload?: boolean;
+  replaced?: {
+    exercise: Exercise;
+    prescription: Prescription;
+    prescribedWeight: number;
+  };
 }
 export interface Session {
   id: string;
@@ -77,7 +82,7 @@ export interface Settings {
   secondaryColor?: string;
 }
 export interface State {
-  schemaVersion: 2;
+  schemaVersion: 3;
   exercises: Exercise[];
   templates: { A: Prescription[]; B: Prescription[] };
   progression: Record<string, LiftState>;

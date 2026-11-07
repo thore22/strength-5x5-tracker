@@ -88,6 +88,23 @@ export default function Help() {
             saves automatically.
           </li>
           <li>
+            Equipment occupied? Tap <strong>Swap</strong> on an accessory before
+            logging any of its sets. Choose a similar exercise, confirm its
+            targets and its own load, then tap{" "}
+            <strong>Use for this workout</strong>. Only today’s session changes;
+            A/B templates stay the same. Swaps, including the original plan,
+            survive reopening and backups. Only the performed exercise affects
+            progression. Some accessories have no close match in the catalog;
+            skip them if needed.
+          </li>
+          <li>
+            Tap the <strong>?</strong> beside an accessory’s name during a
+            workout for its saved description, load guidance and Google, Images
+            and YouTube searches. It also works while paused and after logging
+            sets. The description is available offline; search links open a new
+            tab and require internet.
+          </li>
+          <li>
             Tap <strong>Finish workout → Complete &amp; save</strong> to record
             the session and advance A/B. Discarding does not advance the
             program.

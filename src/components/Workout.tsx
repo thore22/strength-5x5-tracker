@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   discardSession,
   finishSession,
@@ -10,6 +10,9 @@ import type { State } from "../model";
 import type { Change } from "./Program";
 import WorkingWeight from "./WorkingWeight";
 import WarmupSets from "./WarmupSets";
+import AccessorySwap from "./AccessorySwap";
+import AccessoryInfo from "./AccessoryInfo";
+import { accessoryOptions, accessorySwapBlock } from "../accessories";
 export default function Workout({
   data,
   change,
@@ -24,6 +27,12 @@ export default function Workout({
     [summary, setSummary] = useState(false),
     [confirm, setConfirm] = useState<"finish" | "discard" | null>(null),
     [openWarmups, setOpenWarmups] = useState<string[]>([]);
+  const [swapIndex, setSwapIndex] = useState<number | null>(null);
+  const [infoIndex, setInfoIndex] = useState<number | null>(null);
+  const swapOptions = useMemo(
+    () => data.active?.lifts.map((_, i) => accessoryOptions(data, i)) ?? [],
+    [data],
+  );
   const notified = useRef<number | null>(null);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 500);
@@ -234,12 +243,51 @@ export default function Workout({
         return (
           <article
             className={lift.prescription.core ? "lift core" : "lift"}
-            key={lift.exercise.id}
+            key={`${a.id}-${i}`}
           >
-            <small>{lift.prescription.core ? "CORE LIFT" : "ACCESSORY"}</small>
+            <div className="section-heading">
+              <small>
+                {lift.prescription.core ? "CORE LIFT" : "ACCESSORY"}
+              </small>
+              {!lift.prescription.core && (
+                <button
+                  className="text-button"
+                  disabled={
+                    busy ||
+                    a.paused ||
+                    !!accessorySwapBlock(lift) ||
+                    !swapOptions[i].length
+                  }
+                  aria-label={`Swap ${lift.exercise.name}`}
+                  aria-describedby={`swap-help-${i}`}
+                  onClick={() => setSwapIndex(i)}
+                >
+                  Swap
+                </button>
+              )}
+            </div>
+            {lift.replaced && (
+              <p className="previous">
+                Replaces {lift.replaced.exercise.name} · Today only
+              </p>
+            )}
             <div className="lift-title">
-              <h2>{lift.exercise.name}</h2>
+              <div className="exercise-heading">
+                <h2>{lift.exercise.name}</h2>
+                {!lift.prescription.core && (
+                  <button
+                    className="exercise-info-button"
+                    type="button"
+                    aria-label={`Exercise information for ${lift.exercise.name}`}
+                    aria-haspopup="dialog"
+                    onClick={() => setInfoIndex(i)}
+                  >
+                    <span aria-hidden="true">?</span>
+                  </button>
+                )}
+              </div>
               <WorkingWeight
+                key={lift.exercise.id}
                 exercise={lift.exercise}
                 weight={lift.prescribedWeight}
                 units={data.settings.units}
@@ -247,6 +295,14 @@ export default function Workout({
                 busy={busy}
               />
             </div>
+            {!lift.prescription.core && (
+              <p className="previous" id={`swap-help-${i}`}>
+                {accessorySwapBlock(lift) ??
+                  (swapOptions[i].length
+                    ? "Swap before logging any sets. Similar accessories only."
+                    : "No close alternative available in this workout. You can skip this exercise.")}
+              </p>
+            )}
             <p>
               {lift.prescription.sets} × {lift.prescription.minReps}–
               {lift.prescription.maxReps}
@@ -319,7 +375,7 @@ export default function Workout({
                   aria-label={`${lift.exercise.name} set ${j + 1}`}
                   aria-description="First tap logs target reps and starts rest. Further taps reduce reps by one; after zero, the next tap returns to target reps. Corrections do not restart rest."
                   disabled={busy || a.paused || lift.skipped}
-                  key={j}
+                  key={`${lift.exercise.id}-${j}`}
                   onClick={() => change((s) => tapWorkingSet(s, i, j))}
                 >
                   <small>SET {j + 1}</small>
@@ -336,7 +392,7 @@ export default function Workout({
               {lift.sets.map((set, j) => (
                 <form
                   className="row"
-                  key={j}
+                  key={`${lift.exercise.id}-${j}`}
                   onSubmit={(e) => {
                     e.preventDefault();
                     const f = new FormData(e.currentTarget);
@@ -406,6 +462,21 @@ export default function Workout({
           </article>
         );
       })}
+      {swapIndex !== null && (
+        <AccessorySwap
+          data={data}
+          index={swapIndex}
+          change={change}
+          busy={busy}
+          close={() => setSwapIndex(null)}
+        />
+      )}
+      {infoIndex !== null && (
+        <AccessoryInfo
+          exercise={a.lifts[infoIndex].exercise}
+          close={() => setInfoIndex(null)}
+        />
+      )}
       <label>
         Session notes
         <textarea

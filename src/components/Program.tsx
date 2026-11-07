@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ExerciseResources from "./ExerciseResources";
 import {
   initialLift,
   rule,
@@ -184,33 +185,7 @@ export default function Program({
                 </label>
                 <button disabled={busy}>Save exercise information</button>
               </form>
-              <p>
-                {ex.equipment === "dumbbell"
-                  ? "Log load per dumbbell."
-                  : ex.equipment === "assisted bodyweight"
-                    ? "Weight records assistance, separately from repetitions. Less assistance is harder."
-                    : ex.equipment.includes("bodyweight")
-                      ? "Weight records added load, separately from bodyweight repetitions."
-                      : ex.equipment === "timed"
-                        ? "Repetition fields record seconds."
-                        : "Working load includes the bar."}
-              </p>
-              <div className="row">
-                {[
-                  ["Google", "https://www.google.com/search?q="],
-                  ["Images", "https://www.google.com/search?tbm=isch&q="],
-                  ["YouTube", "https://www.youtube.com/results?search_query="],
-                ].map(([label, url]) => (
-                  <a
-                    key={label}
-                    href={`${url}${encodeURIComponent(ex.name + " exercise technique")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {label} ↗
-                  </a>
-                ))}
-              </div>
+              <ExerciseResources exercise={ex} />
             </details>
           </article>
         );

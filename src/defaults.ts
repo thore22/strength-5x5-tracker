@@ -165,6 +165,24 @@ const definitions: [string, string, Equipment, string][] = [
     "machine",
     "Raise heels through a comfortable range of motion.",
   ],
+  [
+    "cable-lateral",
+    "Single-arm Cable Lateral Raise",
+    "machine",
+    "Stand side-on to a cable pulley with a single handle. Raise one arm out to the side without shrugging or swinging, then lower slowly. Complete the target reps on each side before logging a set; record the stack load for one arm.",
+  ],
+  [
+    "db-reverse-fly",
+    "Dumbbell Reverse Fly",
+    "dumbbell",
+    "Sit and lean forward with a dumbbell in each hand, elbows slightly bent. Raise the arms out to the sides and lower slowly without swinging. Keep your back steady; a chest-supported bench is another option. Record weight per dumbbell. This rear-shoulder and upper-back accessory differs from a face pull’s elbow and rotation movement.",
+  ],
+  [
+    "db-calf-raise",
+    "Standing Dumbbell Calf Raise",
+    "dumbbell",
+    "Stand with feet about hip-width apart and a dumbbell in each hand. Raise both heels, pause, then lower with control without bouncing. Use a load you can balance safely. Record weight per dumbbell; zero means no external load. Standing and seated calf raises differ in muscle emphasis.",
+  ],
 ];
 export const catalog: Exercise[] = definitions.map(
   ([id, name, equipment, description]) => ({
@@ -174,6 +192,39 @@ export const catalog: Exercise[] = definitions.map(
     description,
   }),
 );
+// Additive catalog update for existing installs and supported backups. Never
+// replace user-edited definitions, progression, templates, or session snapshots.
+export const accessoryAdditionIds = [
+  "cable-lateral",
+  "db-reverse-fly",
+  "db-calf-raise",
+];
+function initialCatalogWeight(exercise: Exercise): number {
+  if (
+    [
+      "bodyweight",
+      "weighted bodyweight",
+      "assisted bodyweight",
+      "timed",
+    ].includes(exercise.equipment)
+  )
+    return 0;
+  if (exercise.equipment === "dumbbell") return 5;
+  return exercise.id === "cable-lateral" ? 0 : 20;
+}
+export function addAccessoryCatalogEntries(state: State): State {
+  for (const exercise of catalog.filter((e) =>
+    accessoryAdditionIds.includes(e.id),
+  )) {
+    if (state.exercises.some((saved) => saved.id === exercise.id)) continue;
+    if (state.exercises.length >= 1000) continue; // Preserve valid full custom libraries.
+    state.exercises.push(structuredClone(exercise));
+    state.progression[exercise.id] = initialLift(
+      initialCatalogWeight(exercise),
+    );
+  }
+  return state;
+}
 const rx = (
   exerciseId: string,
   core: boolean,
@@ -206,25 +257,11 @@ export function freshState(): State {
   ];
   B[2].rule.increment = 5;
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     exercises: structuredClone(catalog),
     templates: { A, B },
     progression: Object.fromEntries(
-      catalog.map((e) => [
-        e.id,
-        initialLift(
-          [
-            "bodyweight",
-            "weighted bodyweight",
-            "assisted bodyweight",
-            "timed",
-          ].includes(e.equipment)
-            ? 0
-            : e.equipment === "dumbbell"
-              ? 5
-              : 20,
-        ),
-      ]),
+      catalog.map((e) => [e.id, initialLift(initialCatalogWeight(e))]),
     ),
     history: [],
     active: null,

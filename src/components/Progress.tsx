@@ -134,6 +134,11 @@ export default function Progress({
               {h.lifts.map((l) => (
                 <div className="history-lift" key={l.exercise.id}>
                   <h3>{l.exercise.name}</h3>
+                  {l.replaced && (
+                    <p>
+                      Replaces {l.replaced.exercise.name} · This workout only
+                    </p>
+                  )}
                   <p>
                     {l.outcome ?? "logged"}
                     {l.deload ? " · deload triggered" : ""}
