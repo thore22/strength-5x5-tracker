@@ -11,6 +11,7 @@ import type { Change } from "./Program";
 import WorkingWeight from "./WorkingWeight";
 import WarmupSets from "./WarmupSets";
 import AccessorySwap from "./AccessorySwap";
+import AccessoryInfo from "./AccessoryInfo";
 import { accessoryOptions, accessorySwapBlock } from "../accessories";
 export default function Workout({
   data,
@@ -27,6 +28,7 @@ export default function Workout({
     [confirm, setConfirm] = useState<"finish" | "discard" | null>(null),
     [openWarmups, setOpenWarmups] = useState<string[]>([]);
   const [swapIndex, setSwapIndex] = useState<number | null>(null);
+  const [infoIndex, setInfoIndex] = useState<number | null>(null);
   const swapOptions = useMemo(
     () => data.active?.lifts.map((_, i) => accessoryOptions(data, i)) ?? [],
     [data],
@@ -270,7 +272,20 @@ export default function Workout({
               </p>
             )}
             <div className="lift-title">
-              <h2>{lift.exercise.name}</h2>
+              <div className="exercise-heading">
+                <h2>{lift.exercise.name}</h2>
+                {!lift.prescription.core && (
+                  <button
+                    className="exercise-info-button"
+                    type="button"
+                    aria-label={`Exercise information for ${lift.exercise.name}`}
+                    aria-haspopup="dialog"
+                    onClick={() => setInfoIndex(i)}
+                  >
+                    <span aria-hidden="true">?</span>
+                  </button>
+                )}
+              </div>
               <WorkingWeight
                 key={lift.exercise.id}
                 exercise={lift.exercise}
@@ -454,6 +469,12 @@ export default function Workout({
           change={change}
           busy={busy}
           close={() => setSwapIndex(null)}
+        />
+      )}
+      {infoIndex !== null && (
+        <AccessoryInfo
+          exercise={a.lifts[infoIndex].exercise}
+          close={() => setInfoIndex(null)}
         />
       )}
       <label>

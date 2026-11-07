@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { State } from "./model";
+import { addAccessoryCatalogEntries } from "./defaults";
 const num = z.number().finite().min(0).max(100000);
 const count = z.number().int().min(0).max(1000000);
 const timestamp = z.number().finite().min(0).max(Number.MAX_SAFE_INTEGER);
@@ -206,15 +207,17 @@ export function migrateState(input: unknown): State {
     throw new Error("Missing training state.");
   const raw = input as Record<string, unknown>;
   if (raw.schemaVersion === 1 || raw.schemaVersion === 2)
-    return validateState({
-      ...raw,
-      schemaVersion: 3,
-      timerEnd: raw.timerEnd ?? null,
-      reminderDismissedAt: raw.reminderDismissedAt ?? null,
-    });
+    return addAccessoryCatalogEntries(
+      validateState({
+        ...raw,
+        schemaVersion: 3,
+        timerEnd: raw.timerEnd ?? null,
+        reminderDismissedAt: raw.reminderDismissedAt ?? null,
+      }),
+    );
   if (raw.schemaVersion !== 3)
     throw new Error(
       "Unsupported data version. Update the app before restoring this file.",
     );
-  return validateState(raw);
+  return addAccessoryCatalogEntries(validateState(raw));
 }

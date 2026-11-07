@@ -19,8 +19,9 @@ const groups = [
     reason: "Vertical pulling; grip and arm emphasis differ.",
   },
   {
-    ids: ["triceps", "skull"],
-    reason: "Elbow-extension accessory; arm position and loading differ.",
+    ids: ["dips", "triceps", "skull"],
+    reason:
+      "Triceps accessory. Extensions and skull crushers omit the chest work in dips; loads stay independent.",
   },
   {
     ids: ["leg-raise", "knee-raise"],
@@ -36,6 +37,21 @@ const groups = [
     reason:
       "Hip-extension accessory; use a hip hinge on the back-extension bench. Loading and emphasis differ.",
   },
+  {
+    ids: ["lateral", "cable-lateral"],
+    reason:
+      "Side-shoulder raise; resistance differs. For the cable version, do both sides before logging a set.",
+  },
+  {
+    ids: ["face-pull", "db-reverse-fly"],
+    reason:
+      "Rear-shoulder and upper-back accessory; elbow motion and shoulder rotation differ.",
+  },
+  {
+    ids: ["calf", "db-calf-raise"],
+    reason:
+      "Calf-raise accessory; standing and seated versions differ in emphasis. Use an independent load.",
+  },
 ];
 const targets: Record<string, [number, number, number]> = {
   curl: [3, 8, 12],
@@ -43,6 +59,7 @@ const targets: Record<string, [number, number, number]> = {
   hammer: [3, 8, 12],
   pullups: [3, 5, 10],
   chinups: [3, 5, 10],
+  dips: [3, 6, 10],
   triceps: [3, 8, 12],
   skull: [3, 8, 12],
   "leg-raise": [3, 8, 15],
@@ -51,6 +68,12 @@ const targets: Record<string, [number, number, number]> = {
   "ab-wheel": [3, 6, 10],
   rdl: [2, 8, 10],
   "back-extension": [2, 8, 12],
+  lateral: [3, 10, 15],
+  "cable-lateral": [3, 10, 15],
+  "face-pull": [3, 12, 15],
+  "db-reverse-fly": [3, 12, 15],
+  calf: [3, 10, 15],
+  "db-calf-raise": [3, 10, 15],
 };
 export function similarAccessoryIds(id: string): string[] {
   return (

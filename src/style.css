@@ -164,6 +164,40 @@ input[type="color"] {
   gap: 14px;
   flex-wrap: wrap;
 }
+.exercise-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.exercise-heading h2 {
+  overflow-wrap: anywhere;
+}
+.exercise-info-button {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent, #c7ed84);
+}
+.exercise-info-button span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.exercise-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #353d32);
+  border-radius: 10px;
+}
 .working-weight {
   background: transparent;
   padding: 6px 10px;

@@ -38,18 +38,21 @@ describe("curated in-workout accessory swaps", () => {
     ["hammer", ["curl", "db-curl"]],
     ["pullups", ["chinups"]],
     ["chinups", ["pullups"]],
-    ["triceps", ["skull"]],
-    ["skull", ["triceps"]],
+    ["triceps", ["dips", "skull"]],
+    ["skull", ["dips", "triceps"]],
     ["leg-raise", ["knee-raise"]],
     ["knee-raise", ["leg-raise"]],
     ["plank", ["ab-wheel"]],
     ["ab-wheel", ["plank"]],
     ["rdl", ["back-extension"]],
     ["back-extension", ["rdl"]],
-    ["dips", []],
-    ["lateral", []],
-    ["face-pull", []],
-    ["calf", []],
+    ["dips", ["triceps", "skull"]],
+    ["lateral", ["cable-lateral"]],
+    ["cable-lateral", ["lateral"]],
+    ["face-pull", ["db-reverse-fly"]],
+    ["db-reverse-fly", ["face-pull"]],
+    ["calf", ["db-calf-raise"]],
+    ["db-calf-raise", ["calf"]],
     ["bench", []],
     ["unknown", []],
   ])("%s permits only its reviewed matches", (id, allowed) => {
@@ -89,6 +92,54 @@ describe("curated in-workout accessory swaps", () => {
     expect(s.progression["db-curl"].weight).toBe(8);
     expect(validateState(s)).toEqual(s);
   });
+  it.each([
+    ["lateral", "cable-lateral", 5, 10, 15],
+    ["face-pull", "db-reverse-fly", 4, 12, 15],
+    ["calf", "db-calf-raise", 8, 10, 15],
+  ] as const)(
+    "%s has a working replacement with independent progression",
+    (original, replacement, weight, min, max) => {
+      const s = withAccessory(original);
+      const before = structuredClone(s.progression[original]);
+      swapAccessory(s, 5, replacement, weight);
+      expect(s.active!.lifts[5].prescription).toMatchObject({
+        sets: 3,
+        minReps: min,
+        maxReps: max,
+        core: false,
+      });
+      s.active!.lifts[5].sets.forEach((set) => {
+        set.reps = max;
+      });
+      finishSession(s);
+      expect(s.progression[replacement]).toMatchObject({
+        weight,
+        suggestion: weight + 2.5,
+      });
+      expect(s.progression[original]).toEqual(before);
+    },
+  );
+  it.each(["triceps", "skull"])(
+    "dips may be replaced by %s without transferring loads or failures",
+    (replacement) => {
+      const s = freshState();
+      s.progression.dips = {
+        ...initialLift(25),
+        failures: 2,
+        failureWeight: 25,
+      };
+      const before = structuredClone(s.progression.dips);
+      startSession(s, "A");
+      swapAccessory(s, 3, replacement, 10);
+      expect(s.active!.lifts[3].replaced!.exercise.id).toBe("dips");
+      s.active!.lifts[3].sets.forEach((set) => {
+        set.reps = 12;
+      });
+      finishSession(s);
+      expect(s.progression.dips).toEqual(before);
+      expect(s.progression[replacement].suggestion).toBe(12.5);
+    },
+  );
   it("keeps options anchored to the started workout, restores the original custom prescription, and does not chain into unrelated exercises", () => {
     const s = withAccessory();
     const original = structuredClone(s.active!.lifts[5]);

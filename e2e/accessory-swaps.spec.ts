@@ -17,7 +17,7 @@ test("accessory sheet is accessible, persists offline, restores from backup and 
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Swap Dips", exact: true }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   const swap = page.getByRole("button", {
     name: "Swap Hanging Leg Raise",
     exact: true,
@@ -188,7 +188,7 @@ test("loaded alternative requires its own load, cannot swap after starting, and 
       name: "Swap Dumbbell Lateral Raise",
       exact: true,
     }),
-  ).toBeDisabled();
+  ).toBeEnabled();
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Chin-ups", exact: true }),

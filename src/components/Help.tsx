@@ -98,6 +98,13 @@ export default function Help() {
             skip them if needed.
           </li>
           <li>
+            Tap the <strong>?</strong> beside an accessory’s name during a
+            workout for its saved description, load guidance and Google, Images
+            and YouTube searches. It also works while paused and after logging
+            sets. The description is available offline; search links open a new
+            tab and require internet.
+          </li>
+          <li>
             Tap <strong>Finish workout → Complete &amp; save</strong> to record
             the session and advance A/B. Discarding does not advance the
             program.

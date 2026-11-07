@@ -122,6 +122,8 @@ Workout A/B alternation advances after a completed workout, not an abandoned or 
 - Save the replacement’s confirmed load as its own future target, as with normal working-weight edits. Only performed exercises affect progression; replaced exercises never receive a failure.
 - Preserve swaps through restart, app updates, atomic restore and complete JSON backups. Migrate stored schema v1/v2 to v3 without dropping data; continue accepting supported v1/v2 backups. Older app versions reject the new schema instead of silently discarding swap metadata.
 - Curated groups and research rationale are maintained in `ACCESSORY_SWAPS.md`.
+- Dips, triceps extensions and skull crushers share a triceps-accessory group, with the omitted chest component of dips explained. Add cable lateral raises, dumbbell reverse flyes and standing dumbbell calf raises as researched alternatives to the remaining built-in accessories. Add missing catalog entries without replacing existing records or snapshots.
+- Only active accessory cards display a question-mark information button beside the name. Open an accessible modal with the session exercise snapshot, equipment/load note and Google, Images and YouTube technique-search links. Keep the information available offline, while paused and after logging; external searches require internet. Show the replacement snapshot after a swap.
 
 ## 8. History and progress
 
